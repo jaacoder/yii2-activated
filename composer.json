@@ -1,0 +1,33 @@
+{
+    "name": "jaacoder/yii2-activated",
+    "description": "Set of tools to work with Yii2 active records and rest controllers.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "jaacoder",
+            "email": "jaacoder@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        
+        "adbario/php-dot-notation": "1.1.0",
+        
+        "cebe/markdown": "1.1.1",
+        
+        "respect/validation": "~1.1.11",
+        "php-di/phpdoc-reader": "2.0.1",
+        "danielstjules/stringy": "2.3.2",
+        "nesbot/carbon": "1.21.0",
+        "yiisoft/yii2": "~2.0.10"
+    },
+    "config": {
+        "process-timeout": 1800
+    },
+    "autoload": {
+        "psr-4": {
+            "Jaacoder\\Yii2Activated\\": "src/"
+        }
+    }
+}

@@ -2,7 +2,7 @@
 
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
-use Jaacoder\Yii2Activated\Models\ActiveRecordPro;
+use Jaacoder\Yii2Activated\Models\ActiveRecord;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Connection;
@@ -18,7 +18,7 @@ use yii\db\Connection;
  * @method $this orderById($sort = SORT_ASC, $options = [])
  * @method $this groupById($options = [])
  */
-class ActiveQueryPro extends ActiveQuery
+class ActiveQuery extends ActiveQuery
 {
     const DEFAULT_JOIN_TYPE = 'LEFT JOIN';
 
@@ -29,7 +29,7 @@ class ActiveQueryPro extends ActiveQuery
     protected $operators = ['=', '<', '<=', '>', '>=', '<>', '!=', 'in', 'not in', 'like', 'ilike', 'not like', 'not ilike', 'is', 'is not'];
 
     /**
-     * @var ActiveQueryPro
+     * @var ActiveQuery
      */
     protected $originalQuery = null; // if this is a clone whitin a parenthesis
     protected $originalQueryOperator = null; // 'and' or 'or' relational operator
@@ -53,7 +53,7 @@ class ActiveQueryPro extends ActiveQuery
      */
     public function __call($name, $params)
     {
-        /* @var $modelClass ActiveRecordPro */
+        /* @var $modelClass ActiveRecord */
         $modelClass = $this->modelClass;
         $mapping = $modelClass::mapping();
         

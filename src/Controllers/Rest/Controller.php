@@ -24,7 +24,7 @@ use yii\web\UnauthorizedHttpException;
  * @property string $_redirect
  * 
  */
-class ControllerPro extends Controller
+class Controller extends Controller
 {
 
 //    use MetaclassTrait;

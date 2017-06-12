@@ -2,8 +2,8 @@
 
 namespace Jaacoder\Yii2Activated\Models\Generators;
 
-use Jaacoder\Yii2Activated\Models\ActiveRecordPro;
-use Jaacoder\Yii2Activated\Models\Queries\ActiveQueryPro;
+use Jaacoder\Yii2Activated\Models\ActiveRecord;
+use Jaacoder\Yii2Activated\Models\Queries\ActiveQuery;
 use yii\gii\generators\model\Generator;
 
 set_time_limit(1800); // 30 min
@@ -18,8 +18,8 @@ class ModelGenerator extends Generator
      */
     public function init()
     {
-        $this->baseClass = ActiveRecordPro::className();
-        $this->queryBaseClass = ActiveQueryPro::className();
+        $this->baseClass = ActiveRecord::className();
+        $this->queryBaseClass = ActiveQuery::className();
         $this->queryNs = $this->ns . '\queries';
         $this->generateQuery = true;
         

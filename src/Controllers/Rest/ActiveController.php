@@ -3,8 +3,8 @@
 namespace Jaacoder\Yii2Activated\Controllers\Rest;
 
 use ReflectionClass;
-use Jaacoder\Yii2Activated\Controllers\Rest\ControllerPro;
-use Jaacoder\Yii2Activated\Models\ActiveRecordPro;
+use Jaacoder\Yii2Activated\Controllers\Rest\Controller;
+use Jaacoder\Yii2Activated\Models\ActiveRecord;
 use Jaacoder\Yii2Activated\Models\Paging;
 use Yii;
 use yii\db\ActiveQuery;
@@ -12,33 +12,33 @@ use yii\db\ActiveQuery;
 /**
  * Class ActiveControllerPro.
  * 
- * @property ActiveRecordPro $model
- * @property ActiveRecordPro[] $models
- * @property ActiveRecordPro $filter
+ * @property ActiveRecord $model
+ * @property ActiveRecord[] $models
+ * @property ActiveRecord $filter
  * @property boolean $listing
  * @property Paging $paging
  * @property array $orderBy
  * @property array $ids
  */
-class ActiveControllerPro extends ControllerPro
+class ActiveController extends Controller
 {
     const VIEW_LISTING = 'listing';
     const VIEW_FORM = 'form';
 
     /**
-     * @var string|ActiveRecordPro
+     * @var string|ActiveRecord
      */
     protected $modelClass;
 
     /**
      * Model used for insert
-     * @var ActiveRecordPro
+     * @var ActiveRecord
      */
     protected $insertModel;
 
     /**
      * Model used for update
-     * @var ActiveRecordPro
+     * @var ActiveRecord
      */
     protected $updateModel;
 
@@ -57,7 +57,7 @@ class ActiveControllerPro extends ControllerPro
     /**
      * Create new model instance.
      * 
-     * @return ActiveRecordPro
+     * @return ActiveRecord
      */
     public function newModelInstance()
     {
@@ -359,7 +359,7 @@ class ActiveControllerPro extends ControllerPro
         
         $modelClass = $this->modelClass;
         
-        /* @var $model ActiveRecordPro */
+        /* @var $model ActiveRecord */
         foreach ($modelClass::findAll($ids) as $model) {
             $model->delete();
         }

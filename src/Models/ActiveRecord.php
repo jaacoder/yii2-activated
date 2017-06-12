@@ -11,7 +11,7 @@ use yii\db\ActiveRecord;
 /**
  * Description of ActiveRecordPro
  */
-class ActiveRecordPro extends ActiveRecord
+class ActiveRecord extends ActiveRecord
 {
 //    use MetaclassTrait;
     

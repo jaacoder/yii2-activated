@@ -26,8 +26,6 @@ use yii\web\UnauthorizedHttpException;
  */
 class Controller extends Controller
 {
-
-//    use MetaclassTrait;
     use MessagesTrait;
 
     private $dynamicProperties = [];
@@ -52,11 +50,11 @@ class Controller extends Controller
                 'DELETE' => $this->defaultAction,
             ];
         }
-        
+
         // call parent method
         parent::init();
     }
-    
+
     /**
      * @inheritdoc
      * @return array
@@ -73,23 +71,16 @@ class Controller extends Controller
                         'roles' => ['@'],
                     ],
                     empty($this->safeActions()) ? [] : [
-                        'allow' => true,
-                        'actions' => $this->safeActions(),
-                        'roles' => ['?'],
+                'allow' => true,
+                'actions' => $this->safeActions(),
+                'roles' => ['?'],
                     ],
                 ],
+                'matchCallback' => function($rule, $action) {
+                    return $this->matchCallback($rule, $action);
+                },
                 'denyCallback' => function($rule, $action) {
-                    if (\Yii::$app->user->identity === null) {
-                        if (\Yii::$app->request->isAjax) {
-                            throw new UnauthorizedHttpException();
-                            //
-                        } else {
-                            return $this->redirect('main/auth');
-                        }
-                        //
-                    } else {
-                        throw new ForbiddenHttpException();
-                    }
+                    return $this->denyCallback($rule, $action);
                 },
             ],
         ]);
@@ -251,14 +242,14 @@ class Controller extends Controller
         if (is_numeric($id)) {
             array_unshift($pathParams, $id);
             $id = $this->defaultActions[Yii::$app->request->method];
-            
+
             if (is_array($id)) {
                 $id = $id[1]; // index 1 because $id is not empty
             }
             //
         } elseif (empty($id)) {
             $id = $this->defaultActions[Yii::$app->request->method];
-            
+
             if (is_array($id)) {
                 $id = $id[0]; // index 0 because $id is empty
             }
@@ -290,9 +281,9 @@ class Controller extends Controller
 
         // commit all db active transactions
         TransactionHelper::commitTransactions();
-        
+
         if ($serializedResult === null) {
-            
+
             // build result based on response attributes
             $newResult = [];
             foreach ($this->getResponseAttributes() as $responseAttribute) {
@@ -358,8 +349,9 @@ class Controller extends Controller
      */
     public function actionIndex()
     {
+        
     }
-    
+
     /**
      * Return actions with public permission.
      * 
@@ -369,5 +361,36 @@ class Controller extends Controller
     {
         return [];
     }
+    
+    /**
+     * Called to determine if a rule should be applied.
+     * 
+     * @param type $rule
+     * @param type $action
+     */
+    public function matchCallback($rule, $action)
+    {
+        return true;
+    }
 
+    /**
+     * Called when a rule is denied.
+     * 
+     * @param string rule
+     * @param string $action
+     */
+    public function denyCallback($rule, $action)
+    {
+        if (\Yii::$app->user->identity === null) {
+            if (\Yii::$app->request->isAjax) {
+                throw new UnauthorizedHttpException();
+                //
+            } else {
+                return $this->redirect('main/auth');
+            }
+            //
+        } else {
+            throw new ForbiddenHttpException();
+        }
+    }
 }

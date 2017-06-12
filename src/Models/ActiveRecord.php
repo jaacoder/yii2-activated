@@ -6,12 +6,11 @@ use Carbon\Carbon;
 use Jaacoder\Yii2Activated\Helpers\AppException;
 use Jaacoder\Yii2Activated\Helpers\AppMessage;
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
 
 /**
  * Description of ActiveRecordPro
  */
-class ActiveRecord extends ActiveRecord
+class ActiveRecord extends \yii\db\ActiveRecord
 {
 //    use MetaclassTrait;
     

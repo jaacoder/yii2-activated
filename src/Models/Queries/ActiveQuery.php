@@ -3,8 +3,6 @@
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
 use Jaacoder\Yii2Activated\Models\ActiveRecord;
-use yii\db\ActiveQuery;
-use yii\db\ActiveRecord;
 use yii\db\Connection;
 
 /**
@@ -18,7 +16,7 @@ use yii\db\Connection;
  * @method $this orderById($sort = SORT_ASC, $options = [])
  * @method $this groupById($options = [])
  */
-class ActiveQuery extends ActiveQuery
+class ActiveQuery extends \yii\db\ActiveQuery
 {
     const DEFAULT_JOIN_TYPE = 'LEFT JOIN';
 
@@ -229,7 +227,7 @@ class ActiveQuery extends ActiveQuery
             $value = true;
             //
         } else {
-            $operator = in_array($params[0], self::$operators, true) ? array_shift($params) : null;
+            $operator = in_array($params[0], $this->operators, true) ? array_shift($params) : null;
             $value = array_shift($params);
         }
 

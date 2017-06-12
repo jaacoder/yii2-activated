@@ -99,7 +99,7 @@ class ActiveController extends Controller
      */
     public function actionIndex()
     {
-        $this->actionListing();
+        return $this->actionListing();
     }
     
     /**

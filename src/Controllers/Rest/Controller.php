@@ -13,7 +13,6 @@ use Yii;
 use yii\base\UnknownPropertyException;
 use yii\filters\AccessControl;
 use yii\rest\Action;
-use yii\rest\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\UnauthorizedHttpException;
 
@@ -24,8 +23,9 @@ use yii\web\UnauthorizedHttpException;
  * @property string $_redirect
  * 
  */
-class Controller extends Controller
+class Controller extends \yii\rest\Controller
 {
+
     use MessagesTrait;
 
     private $dynamicProperties = [];
@@ -69,16 +69,19 @@ class Controller extends Controller
                         'allow' => true,
                         'actions' => [],
                         'roles' => ['@'],
+                        'matchCallback' => function($rule, $action) {
+                            return $this->matchCallback($rule, $action);
+                        },
                     ],
                     empty($this->safeActions()) ? [] : [
-                'allow' => true,
-                'actions' => $this->safeActions(),
-                'roles' => ['?'],
+                        'allow' => true,
+                        'actions' => $this->safeActions(),
+                        'roles' => ['?'],
+                        'matchCallback' => function($rule, $action) {
+                            return $this->matchCallback($rule, $action);
+                        },
                     ],
                 ],
-                'matchCallback' => function($rule, $action) {
-                    return $this->matchCallback($rule, $action);
-                },
                 'denyCallback' => function($rule, $action) {
                     return $this->denyCallback($rule, $action);
                 },
@@ -313,16 +316,17 @@ class Controller extends Controller
         $responseAttributes = [];
 
         // find base parent class
-        $selfReflectionClass = new ReflectionClass(self::className());
+        $selfReflectionClass = new ReflectionClass(Controller::className());
         $baseParentClass = $selfReflectionClass->getParentClass()->getName();
-
+        
         // loop until base parent class reading all doc properties
         $reflectionClass = new ReflectionClass(get_called_class());
+        
         while ($reflectionClass->getName() !== $baseParentClass) {
-
+            
             // save doc properties
             $responseAttributes = array_merge($responseAttributes, array_keys($this->getDocProperties($reflectionClass)));
-
+            
             // go to parent class
             $reflectionClass = $reflectionClass->getParentClass();
         }
@@ -361,7 +365,7 @@ class Controller extends Controller
     {
         return [];
     }
-    
+
     /**
      * Called to determine if a rule should be applied.
      * 
@@ -393,4 +397,5 @@ class Controller extends Controller
             throw new ForbiddenHttpException();
         }
     }
+
 }

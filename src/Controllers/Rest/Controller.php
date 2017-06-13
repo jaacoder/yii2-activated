@@ -386,12 +386,7 @@ class Controller extends \yii\rest\Controller
     public function denyCallback($rule, $action)
     {
         if (\Yii::$app->user->identity === null) {
-            if (\Yii::$app->request->isAjax) {
-                throw new UnauthorizedHttpException();
-                //
-            } else {
-                return $this->redirect('main/auth');
-            }
+            throw new UnauthorizedHttpException();
             //
         } else {
             throw new ForbiddenHttpException();

@@ -1,6 +1,6 @@
 <?php
 
-namespace Jaacoder\Yii2Activated\Models\Validators;
+namespace Jaacoder\Yii2Activated\Helpers\Validators;
 
 use yii\validators\Validator;
 

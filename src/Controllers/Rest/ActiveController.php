@@ -43,10 +43,10 @@ class ActiveController extends Controller
     protected $updateModel;
 
     /**
-     * Call actionInitForm() after actionInsert() ?
+     * Call actionNew() after actionInsert() ?
      * @var bool
      */
-    protected $initFormAfterInsert = true;
+    protected $newAfterInsert = true;
     
     /**
      * search at listing view even if no search was done before
@@ -300,7 +300,7 @@ class ActiveController extends Controller
         $this->addInsertMessage();
 
         // clear form ?
-        if ($this->initFormAfterInsert) {
+        if ($this->newAfterInsert) {
             $this->actionNew();
         }
     }

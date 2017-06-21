@@ -34,6 +34,12 @@ class Controller extends \yii\rest\Controller
      * @var array
      */
     public $defaultActions = [];
+    
+    /**
+     * Flag to mark when to add authorization to behaviors
+     * @var type
+     */
+    public $auth = true;
 
     /**
      * Initializes the object.
@@ -50,7 +56,7 @@ class Controller extends \yii\rest\Controller
                 'DELETE' => $this->defaultAction,
             ];
         }
-
+        
         // call parent method
         parent::init();
     }
@@ -61,7 +67,7 @@ class Controller extends \yii\rest\Controller
      */
     public function behaviors()
     {
-        return array_merge(parent::behaviors(), [
+        return array_merge(parent::behaviors(), $this->auth ? [
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -86,7 +92,7 @@ class Controller extends \yii\rest\Controller
                     return $this->denyCallback($rule, $action);
                 },
             ],
-        ]);
+        ] : []);
     }
 
     /**

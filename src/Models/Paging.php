@@ -15,7 +15,7 @@ class Paging
     /**
      * @var int
      */
-    public $perPage = 5;
+    public $perPage = 10;
     
     /**
      * @var int

@@ -84,7 +84,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             return call_user_func_array([$this, 'doJoinWith'], array_merge([$relation], $params));
             //
             // filter
-        } else if (isset($mapping[$name]) || isset($modelClass::getTableSchema()->columnNames[$name])) {
+        } else if (isset($mapping[$name]) || in_array($name, $modelClass::getTableSchema()->columnNames)) {
             $realColumn = isset($mapping[$name]) ? $mapping[$name] : $name;
             return call_user_func_array([$this, 'doFilter'], array_merge([$realColumn], $params));
         }

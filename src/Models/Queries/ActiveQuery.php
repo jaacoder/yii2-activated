@@ -262,7 +262,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         $params = func_get_args();
         array_shift($params); // shift '$column'
         
-        $sort = isset($params[0]) ? $params[1] : SORT_ASC;
+        $sort = isset($params[0]) ? $params[0] : SORT_ASC;
         $options = array_merge(['table' => $this->alias], isset($params[1]) ? $params[1] : []);
 
         $columnExpression = "{{{$options['table']}}}.$column";

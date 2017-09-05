@@ -4,7 +4,7 @@
  */
 
 /* @var $this yii\web\View */
-/* @var $generator yii\gii\generators\model\Generator */
+/* @var $generator Jaacoder\Yii2Activated\Models\Generators\ModelGenerator */
 /* @var $tableName string full table name */
 /* @var $className string class name */
 /* @var $queryClassName string query class name */
@@ -17,38 +17,34 @@ if (!function_exists('getPropertyName')) {
     function getPropertyName(yii\db\ColumnSchema $columnSchema)
     {
         $column = $columnSchema->name;
-        $comment = $columnSchema->comment;
 
-        $matches = [];
+        // convert to camelcase
 
-        preg_match_all("/\(\s*(\{\s*.*\s*\})\s*\)/", $comment, $matches);
+        // split column segments
+        $parts = mb_split('_', $column);
 
-        $property = null;
-        if (isset($matches[1][0]) ? $matches[1][0] : null) {
-            $docProperties = json_decode($matches[1][0], true);
-            $property = isset($docProperties['property']) ? $docProperties['property'] : null;
+        // glue each segment with proper case
+        $property = array_shift($parts);
+        foreach ($parts as $part) {
+            $property .= ucfirst($part);
         }
-
-        if ($property === null) {
-            $parts = mb_split('_', $column);
-
-            if (count($parts) >= 2) { 
-
-                // remove column prefix
-                array_shift($parts);
-
-                $property = array_shift($parts);
-                foreach ($parts as $part) {
-                    $property .= ucfirst($part);
-                }
-                //
-            } else {
-                $property = $column;
-            }
-
-        }
-
+        
         return $property;
+        }
+}
+
+if (!function_exists('normalizeRelation')) {
+    function normalizeRelation($relation)
+    {
+        $firstTwoLetters = mb_substr($relation, 0, 2);
+        $thirdLetter = $relation[2];
+        
+        // starts with 'id' and the third letter is upper case? remove 'id'
+        if (in_array($firstTwoLetters, ['id', 'Id']) && $thirdLetter === mb_strtoupper($thirdLetter)) {
+            return mb_substr($relation, 2);
+        }
+
+        return $relation;
     }
 }
 
@@ -68,7 +64,7 @@ use Yii;
 <?php if (!empty($relations)): ?>
  *
 <?php foreach ($relations as $name => $relation): ?>
- * @property <?= $relation[1] . ($relation[2] ? '[]' : '') . ' $' . lcfirst($name) . "\n" ?>
+ * @property <?= $relation[1] . ($relation[2] ? '[]' : '') . ' $' . lcfirst(normalizeRelation($name)) . "\n" ?>
 <?php endforeach; ?>
 <?php endif; ?>
  */

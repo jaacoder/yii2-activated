@@ -70,7 +70,7 @@ trait RouteTrait
 
         // call parent only if this trait function was not renamed
         $thisFunctionsName = debug_backtrace(0, 1)[0]['function'];
-        if ($thisFunctionsName === __METHOD__) {
+        if ($thisFunctionsName === __FUNCTION__) {
             return parent::runAction($id, $params);
             //
         } else { // else return [$id, $params]

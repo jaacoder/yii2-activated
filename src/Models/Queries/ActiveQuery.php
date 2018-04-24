@@ -2,22 +2,29 @@
 
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
-use yii\db\ActiveQuery;
-use yii\db\ActiveRecord;
+use Jaacoder\Yii2Activated\Models\ActiveRecord;
 use yii\db\Connection;
 
 /**
- * Trait ActiveQueryExtrasTrait.
+ * Class ActiveQueryPro.
  * 
- * @author jaacoder
+ * @property string $alias
+ * @property string $escapedAlias
+ * 
+ * @method $this selectId($options = [])
+ * @method $this id($operator = null, $value = null, $options = [])
+ * @method $this orderById($sort = SORT_ASC, $options = [])
+ * @method $this groupById($options = [])
  */
-trait ActiveQueryExtrasTrait
+class ActiveQuery extends \yii\db\ActiveQuery
 {
-    public $_relationAliases = [];
-    protected $_filterType = 'where';
-    protected $_operators = ['=', '<', '<=', '>', '>=', '<>', '!=', 'in', 'not in', 'like', 'ilike', 'not like', 'not ilike', 'is', 'is not', '&'];
-    private $alias;
-    private $_defaultJoinType = 'LEFT JOIN';
+    const DEFAULT_JOIN_TYPE = 'LEFT JOIN';
+
+    private $_alias;
+    protected $filterType = 'where';
+    public $relationAliases = [];
+    
+    protected $operators = ['=', '<', '<=', '>', '>=', '<>', '!=', 'in', 'not in', 'like', 'ilike', 'not like', 'not ilike', 'is', 'is not'];
 
     /**
      * @var ActiveQuery
@@ -25,12 +32,14 @@ trait ActiveQueryExtrasTrait
     protected $originalQuery = null; // if this is a clone whitin a parenthesis
     protected $originalQueryOperator = null; // 'and' or 'or' relational operator
 
-    public function initActiveQueryExtras()
+    public function init()
     {
+        parent::init();
+
         // set default alias for this query
-        if (empty($this->alias)) {
+        if (empty($this->_alias)) {
             $modelClass = $this->modelClass;
-            $this->alias = $modelClass::tableName();
+            $this->_alias = $modelClass::tableName();
         }
     }
 
@@ -190,28 +199,11 @@ trait ActiveQueryExtrasTrait
         
         $callback = isset($params[0]) ? $params[0] : null;
         $eagerLoading = isset($params[1]) ? $params[1] : true;
-        $joinType = isset($params[2]) ? $params[2] : $this->_defaultJoinType;
+        $joinType = isset($params[2]) ? $params[2] : self::DEFAULT_JOIN_TYPE;
         $options = isset($params[3]) ? $params[3] : [];
         
-        // check if options is before
-        if (is_array($callback) && !is_callable($callback)) {
-            $options = $callback;
-            $callback = null;
-            $eagerLoading = true;
-            $joinType = $this->_defaultJoinType;
-            //
-        } elseif (is_array($eagerLoading)) {
-            $options = $eagerLoading;
-            $eagerLoading = true;
-            $joinType = $this->_defaultJoinType;
-            //
-        } elseif (is_array($joinType)) {
-            $options = $joinType;
-            $joinType = $this->_defaultJoinType;
-        }
-        
         if (isset($options['alias'])) {
-            $this->_relationAliases[$relation] = $options['alias'];
+            $this->relationAliases[$relation] = $options['alias'];
             $relation = "$relation $options[alias]";
         }
         
@@ -235,13 +227,13 @@ trait ActiveQueryExtrasTrait
             $value = true;
             //
         } else {
-            $operator = in_array($params[0], $this->_operators, true) ? array_shift($params) : null;
+            $operator = in_array($params[0], $this->operators, true) ? array_shift($params) : null;
             $value = array_shift($params);
         }
 
         $options = array_shift($params) ?: [];
         $methodPrefix = in_array('or', $options) ? 'or' : 'and';
-        $method = $methodPrefix . ($this->_filterType === 'where' ? 'Where' : 'OnCondition');
+        $method = $methodPrefix . ($this->filterType === 'where' ? 'Where' : 'OnCondition');
 
         // ignore empty values ?
         if ($this->isEmpty($value) && !in_array('allowEmpty', $options) && !in_array($operator, ['is', 'is not'])) {
@@ -361,7 +353,7 @@ trait ActiveQueryExtrasTrait
      */
     public function getAlias()
     {
-        return $this->alias;
+        return $this->_alias;
     }
 
     /**
@@ -369,7 +361,7 @@ trait ActiveQueryExtrasTrait
      */
     public function getEscapedAlias()
     {
-        return "{{{$this->alias}}}";
+        return "{{{$this->_alias}}}";
     }
 
     /**
@@ -381,7 +373,7 @@ trait ActiveQueryExtrasTrait
     public function alias($alias)
     {
         // save current alias
-        $this->alias = $alias;
+        $this->_alias = $alias;
 
         return parent::alias($alias);
     }
@@ -393,7 +385,7 @@ trait ActiveQueryExtrasTrait
      */
     public function joinFilter()
     {
-        $this->_filterType = 'join';
+        $this->filterType = 'join';
         return $this;
     }
 
@@ -404,7 +396,7 @@ trait ActiveQueryExtrasTrait
      */
     public function whereFilter()
     {
-        $this->_filterType = 'where';
+        $this->filterType = 'where';
         return $this;
     }
 
@@ -434,4 +426,5 @@ trait ActiveQueryExtrasTrait
         $model = parent::one($db);
         return $model ? $model : (new $modelClass());
     }
+    
 }

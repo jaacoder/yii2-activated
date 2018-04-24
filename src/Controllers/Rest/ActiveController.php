@@ -291,9 +291,9 @@ class ActiveController extends Controller
         // if no insertModel, create one to use
         if (!$this->insertModel) {
             $this->insertModel = $this->newModelInstance();
+            $this->insertModel->attributes = $this->post(null, []);
         }
 
-        $this->insertModel->attributes = $this->post(null, []);
         $this->insertModel->insert();
 
         // insert message
@@ -314,10 +314,10 @@ class ActiveController extends Controller
         if (!$this->updateModel) {
             $modelClass = $this->modelClass;
             $this->updateModel = $modelClass::findOne($id);
+            
+            // fill with post data
+            $this->updateModel->attributes = Yii::$app->request->post(null, []);
         }
-
-        // fill with post data
-        $this->updateModel->attributes = Yii::$app->request->post(null, []);
 
         // save
         $this->updateModel->update();

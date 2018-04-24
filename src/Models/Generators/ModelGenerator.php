@@ -2,12 +2,11 @@
 
 namespace Jaacoder\Yii2Activated\Models\Generators;
 
+use Stringy\Stringy;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
+use yii\db\ColumnSchema;
 use yii\gii\generators\model\Generator;
-use function mb_strpos;
-use function mb_substr;
-use function Stringy\create as s;
 
 set_time_limit(1800); // 30 min
 
@@ -24,13 +23,20 @@ class ModelGenerator extends Generator
     public $removeTablePrefixFromClassName = true;
 
     /**
+     * remove column prefix from property name
+     * @var boolean
+     */
+    public $removeColumnPrefixFromPropertyName = true;
+
+    /**
      * @inheritdoc
      */
     public function rules()
     {
         $rules = parent::rules();
         $rules[] = ['removeTablePrefixFromClassName', 'safe'];
-        
+        $rules[] = ['removeColumnPrefixFromPropertyName', 'safe'];
+
         return $rules;
     }
 
@@ -59,7 +65,7 @@ class ModelGenerator extends Generator
         $className = parent::generateClassName($tableName, $useSchemaName);
 
         // remove table prefix if present
-        if ($this->removeTablePrefixFromClassName && (((string) s($tableName)->upperCamelize()) === $className)) {
+        if ($this->removeTablePrefixFromClassName && (((string) Stringy::create($tableName)->upperCamelize()) === $className)) {
 
             // find first underscore in table name
             $underscorePosition = mb_strpos($tableName, '_');
@@ -71,6 +77,33 @@ class ModelGenerator extends Generator
         }
 
         return $className;
+    }
+
+    /**
+     * 
+     * @param \Jaacoder\Yii2Activated\Models\Generators\yii\db\ColumnSchema $columnSchema
+     * @return type
+     */
+    function getPropertyName(ColumnSchema $columnSchema)
+    {
+        $column = $columnSchema->name;
+
+        // convert to camelcase
+        // split column segments
+        $parts = mb_split('_', $column);
+
+        // glue each segment with proper case
+        $property = array_shift($parts);
+
+        if ($this->removeColumnPrefixFromPropertyName) {
+            $property = array_shift($parts);
+        }
+
+        foreach ($parts as $part) {
+            $property .= ucfirst($part);
+        }
+
+        return $property;
     }
 
 }

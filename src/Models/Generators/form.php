@@ -9,6 +9,7 @@ use yii\gii\generators\model\Generator;
 echo $form->field($generator, 'tableName')->textInput(['table_prefix' => $generator->getTablePrefix()]);
 echo $form->field($generator, 'modelClass');
 echo $form->field($generator, 'removeTablePrefixFromClassName')->checkbox();
+echo $form->field($generator, 'removeColumnPrefixFromPropertyName')->checkbox();
 echo $form->field($generator, 'ns');
 echo $form->field($generator, 'baseClass');
 echo $form->field($generator, 'db');

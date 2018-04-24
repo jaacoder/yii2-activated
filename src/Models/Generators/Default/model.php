@@ -13,26 +13,6 @@
 /* @var $rules string[] list of validation rules */
 /* @var $relations array list of relations (name => relation declaration) */
 
-if (!function_exists('getPropertyName')) {
-    function getPropertyName(yii\db\ColumnSchema $columnSchema)
-    {
-        $column = $columnSchema->name;
-
-        // convert to camelcase
-
-        // split column segments
-        $parts = mb_split('_', $column);
-
-        // glue each segment with proper case
-        $property = array_shift($parts);
-        foreach ($parts as $part) {
-            $property .= ucfirst($part);
-        }
-        
-        return $property;
-        }
-}
-
 if (!function_exists('normalizeRelation')) {
     function normalizeRelation($relation)
     {
@@ -59,7 +39,7 @@ use Yii;
  * This is the model class for table "<?= $generator->generateTableName($tableName) ?>".
  *
 <?php foreach ($tableSchema->columns as $column):?>
- * @property <?= "{$column->phpType} \$" . getPropertyName($column) . "\n" ?>
+ * @property <?= "{$column->phpType} \$" . $generator->getPropertyName($column) . "\n" ?>
 <?php endforeach; ?>
 <?php if (!empty($relations)): ?>
  *
@@ -115,7 +95,7 @@ class <?= $className ?> extends <?= '\\' . ltrim($generator->baseClass, '\\') . 
     {
         return [
 <?php foreach ($tableSchema->columns as $column):?>
-            <?= "'" . getPropertyName($column) . "' => '$column->name',\n" ?>
+            <?= "'" . $generator->getPropertyName($column) . "' => '$column->name',\n" ?>
 <?php endforeach; ?>
         ];
     }

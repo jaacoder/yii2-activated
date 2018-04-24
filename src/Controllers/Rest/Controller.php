@@ -21,6 +21,7 @@ use yii\web\UnauthorizedHttpException;
  * 
  * @property string $view
  * @property string $_redirect
+ * @property bool $authEnabled
  * 
  */
 class Controller extends \yii\rest\Controller
@@ -34,7 +35,7 @@ class Controller extends \yii\rest\Controller
      * @var array
      */
     public $defaultActions = [];
-    
+
     /**
      * Flag to mark when to add authorization to behaviors
      * @var type
@@ -56,9 +57,18 @@ class Controller extends \yii\rest\Controller
                 'DELETE' => $this->defaultAction,
             ];
         }
-        
+
         // call parent method
         parent::init();
+    }
+
+    /**
+     * Return if auth is enabled.
+     * @return bool
+     */
+    public function getAuthEnabled()
+    {
+        return $this->auth && (\Yii::$app->params['auth'] ?? true);
     }
 
     /**
@@ -67,7 +77,7 @@ class Controller extends \yii\rest\Controller
      */
     public function behaviors()
     {
-        return array_merge(parent::behaviors(), $this->auth ? [
+        return array_merge(parent::behaviors(), $this->authEnabled ? [
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
@@ -80,19 +90,19 @@ class Controller extends \yii\rest\Controller
                         },
                     ],
                     empty($this->safeActions()) ? [] : [
-                        'allow' => true,
-                        'actions' => $this->safeActions(),
-                        'roles' => ['?'],
-                        'matchCallback' => function($rule, $action) {
-                            return $this->matchCallback($rule, $action);
-                        },
+                    'allow' => true,
+                    'actions' => $this->safeActions(),
+                    'roles' => ['?'],
+                    'matchCallback' => function($rule, $action) {
+                        return $this->matchCallback($rule, $action);
+                    },
                     ],
                 ],
                 'denyCallback' => function($rule, $action) {
                     return $this->denyCallback($rule, $action);
                 },
             ],
-        ] : []);
+            ] : []);
     }
 
     /**
@@ -324,15 +334,15 @@ class Controller extends \yii\rest\Controller
         // find base parent class
         $selfReflectionClass = new ReflectionClass(Controller::className());
         $baseParentClass = $selfReflectionClass->getParentClass()->getName();
-        
+
         // loop until base parent class reading all doc properties
         $reflectionClass = new ReflectionClass(get_called_class());
-        
+
         while ($reflectionClass->getName() !== $baseParentClass) {
-            
+
             // save doc properties
             $responseAttributes = array_merge($responseAttributes, array_keys($this->getDocProperties($reflectionClass)));
-            
+
             // go to parent class
             $reflectionClass = $reflectionClass->getParentClass();
         }

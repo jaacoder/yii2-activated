@@ -10,6 +10,7 @@ use yii\db\Connection;
  */
 class TransactionHelper
 {
+
     /**
      * Return all active db connections.
      * 
@@ -19,30 +20,23 @@ class TransactionHelper
     public static function getConnections()
     {
         static $connections = null;
-        
+
+
         if ($connections === null) {
             $connections = [];
-            
-            foreach (Yii::$app->getComponents() as $name => $component) {
-                if (!is_array($component) || !isset($component['class'])) {
-                    continue;
-                }
 
-                if (is_a($component['class'], Connection::className(), /* $allow_string = */ true)) {
-                    $connection = Yii::$app->get($name);
-                    
-                    /* @var $connection Connection */
-                    
-                    if ($connection !== null && $connection->isActive) {
-                        $connections[] = $connection;
-                    }
+            foreach (Yii::$app->getComponents() as $name => $component) {
+
+                $connection = Yii::$app->get($name);
+                if (is_object($connection) && $connection instanceof Connection && $connection->isActive) {
+                    $connections[] = $connection;
                 }
             }
         }
-        
+
         return $connections;
     }
-    
+
     /**
      * Commit all active db transactions.
      */
@@ -52,11 +46,11 @@ class TransactionHelper
             if ($connection->transaction === null || !$connection->transaction->isActive) {
                 continue;
             }
-            
+
             $connection->transaction->commit();
         }
     }
-    
+
     /**
      * Rollback all active db transactions.
      */
@@ -66,8 +60,9 @@ class TransactionHelper
             if ($connection->transaction === null || !$connection->transaction->isActive) {
                 continue;
             }
-            
+
             $connection->transaction->rollBack();
         }
     }
+
 }

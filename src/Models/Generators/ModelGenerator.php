@@ -16,19 +16,31 @@ set_time_limit(1800); // 30 min
  */
 class ModelGenerator extends Generator
 {
+
     /**
      * remove table prefix from class name
      * @var boolean
      */
     public $removeTablePrefixFromClassName = true;
-    
+
+    /**
+     * @inheritdoc
+     */
+    public function rules()
+    {
+        $rules = parent::rules();
+        $rules[] = ['removeTablePrefixFromClassName', 'safe'];
+        
+        return $rules;
+    }
+
     /**
      * @inheritdoc
      */
     public function init()
     {
         parent::init();
-        
+
         $this->baseClass = ActiveRecord::className();
         $this->queryBaseClass = ActiveQuery::className();
         $this->queryNs = $this->ns . '\queries';
@@ -47,12 +59,11 @@ class ModelGenerator extends Generator
         $className = parent::generateClassName($tableName, $useSchemaName);
 
         // remove table prefix if present
-        if ($this->removeTablePrefixFromClassName 
-            && (((string) s($tableName)->upperCamelize()) === $className)) {
+        if ($this->removeTablePrefixFromClassName && (((string) s($tableName)->upperCamelize()) === $className)) {
 
             // find first underscore in table name
             $underscorePosition = mb_strpos($tableName, '_');
-            
+
             // remove prefix before this position
             if ($underscorePosition) {
                 return mb_substr($className, $underscorePosition);
@@ -61,4 +72,5 @@ class ModelGenerator extends Generator
 
         return $className;
     }
+
 }

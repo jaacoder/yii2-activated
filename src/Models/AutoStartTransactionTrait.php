@@ -2,23 +2,28 @@
 
 namespace Jaacoder\Yii2Activated\Models;
 
+use yii\base\ModelEvent;
+use yii\db\ActiveRecord;
+
 /**
  * Class TransactionHandlerTrait.
  */
 trait AutoStartTransactionTrait
 {
-    
+
     public function initAutoStartTransaction()
     {
-        $handler = function() {
-            $this->requireTransaction();
+        $handler = function(ModelEvent $modelEvent) {
+            if ($modelEvent->isValid) {
+                $this->requireTransaction();
+            }
         };
-        
-        $this->on(\yii\db\ActiveRecord::EVENT_BEFORE_INSERT, $handler);
-        $this->on(\yii\db\ActiveRecord::EVENT_BEFORE_UPDATE, $handler);
-        $this->on(\yii\db\ActiveRecord::EVENT_BEFORE_DELETE, $handler);
+
+        $this->on(ActiveRecord::EVENT_BEFORE_INSERT, $handler);
+        $this->on(ActiveRecord::EVENT_BEFORE_UPDATE, $handler);
+        $this->on(ActiveRecord::EVENT_BEFORE_DELETE, $handler);
     }
-    
+
     /**
      * Ensure a transaction is active.
      */
@@ -28,4 +33,5 @@ trait AutoStartTransactionTrait
             $this->getDb()->beginTransaction();
         }
     }
+
 }

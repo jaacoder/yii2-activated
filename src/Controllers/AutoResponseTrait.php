@@ -6,7 +6,6 @@ use ReflectionClass;
 use yii\base\ActionEvent;
 use yii\base\UnknownPropertyException;
 use yii\web\Controller;
-use function mb_substr;
 
 /**
  * Trait AutoResponseTrait.
@@ -17,12 +16,16 @@ trait AutoResponseTrait
 {
 
     private $_dynamicProperties = [];
+    
+    private $_filters = [];
 
     /**
      * Init auto response trait.
      */
-    public function initAutoResponse()
+    public function initAutoResponse($filters = [])
     {
+        $this->_filters = $filters;
+        
         $this->on(static::EVENT_AFTER_ACTION, function(ActionEvent $event) {
 
             if ($event->result !== null) {
@@ -33,6 +36,16 @@ trait AutoResponseTrait
             $newResult = [];
             foreach ($this->getResponseAttributes() as $responseAttribute) {
                 if (isset($this->_dynamicProperties[$responseAttribute])) {
+                    
+                    // check if type is allowed
+                    if (isset($this->_filters[$responseAttribute]['type'])) {
+                        $type = gettype($this->$responseAttribute);
+                        $typeAllowed = $this->_filters[$responseAttribute]['type'];
+                        if ($this->$responseAttribute !== null && $type !== $typeAllowed) {
+                            continue;
+                        }
+                    }
+                    
                     $newResult[$responseAttribute] = $this->$responseAttribute;
                 }
             }

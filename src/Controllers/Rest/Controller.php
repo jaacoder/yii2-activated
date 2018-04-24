@@ -68,7 +68,7 @@ class Controller extends \yii\rest\Controller
      */
     public function getAuthEnabled()
     {
-        return $this->auth && (\Yii::$app->params['auth'] ?? true);
+        return $this->auth && (isset(\Yii::$app->params['auth']) ? \Yii::$app->params['auth'] : true);
     }
 
     /**

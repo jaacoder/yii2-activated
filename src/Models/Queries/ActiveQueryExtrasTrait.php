@@ -2,10 +2,6 @@
 
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
-use yii\db\ActiveQuery;
-use yii\db\ActiveRecord;
-use yii\db\Connection;
-
 /**
  * Trait ActiveQueryExtrasTrait.
  * 

@@ -80,7 +80,7 @@ trait MappingTrait
     }
     
     /**
-     * Map array keys to properties.
+     * Map array keys to columns.
      * 
      * @param array $values
      * @return array
@@ -111,14 +111,5 @@ trait MappingTrait
     public function setAttributes($values, $safeOnly = true)
     {
         parent::setAttributes(static::mapToColumns($values), $safeOnly);
-    }
-    
-    /**
-     * @inheritdoc
-     * @return array
-     */
-    public function getErrors($attribute = null)
-    {
-        return static::mapToProperties(parent::getErrors());
     }
 }

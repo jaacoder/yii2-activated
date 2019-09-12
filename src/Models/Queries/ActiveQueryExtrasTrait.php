@@ -2,6 +2,7 @@
 
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
+use ReflectionClass;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Connection;
@@ -16,6 +17,7 @@ trait ActiveQueryExtrasTrait
     public $_relationAliases = [];
     protected $_filterType = 'where';
     protected $_operators = ['=', '<', '<=', '>', '>=', '<>', '!=', 'in', 'not in', 'like', 'ilike', 'not like', 'not ilike', 'is', 'is not', '&'];
+    protected $_operation = 'where';
     private $alias;
     private $_defaultJoinType = 'LEFT JOIN';
 
@@ -35,6 +37,96 @@ trait ActiveQueryExtrasTrait
     }
 
     /**
+     * @return $this
+     */
+    public function select($columns = null, $option = null)
+    {
+
+        if ($columns === null) {
+            $this->_operation = 'select';
+            return $this;
+        }
+
+        return parent::select($columns, $option);
+    }
+
+    /**
+     * @return $this
+     */
+    public function with()
+    {
+        $args = func_get_args();
+
+        if (count($args) === 0) {
+            $this->_operation = 'with';
+            return $this;
+        }
+
+        // convert to string if needed
+        if (isset($args[0]) && $args[0] instanceof \Jaacoder\Yii2Activated\Helpers\Meta) {
+            $args[0] = (string) $args[0];
+
+            // prepare query callback if needed
+            if (isset($args[1]) && $args[1] instanceof ActiveQuery) {
+                $args = [[$args[0] => $this->queryToFunction($args[1])]];
+            }
+        }
+
+        return parent::with(...$args);
+    }
+
+    /**
+     * @return $this
+     */
+    public function joinWith($with = null, $eagerLoading = true, $joinType = 'LEFT JOIN')
+    {
+        if ($with === null) {
+            $this->_operation = 'joinWith';
+            return $this;
+        }
+
+        if ($with instanceof \Jaacoder\Yii2Activated\Helpers\Meta) {
+            $with = (string) $with;
+        }
+
+        return parent::joinWith($with, $eagerLoading, $joinType);
+    }
+
+    /**
+     * @return $this
+     */
+    public function where($condition = null, $params = array())
+    {
+        if ($condition === null) {
+            $this->_operation = 'where';
+            return $this;
+        }
+
+        return parent::where($condition, $params);
+    }
+
+    /**
+     * @return $this
+     */
+    public function orderBy($columns = null)
+    {
+        if ($columns === null) {
+            $this->_operation = 'orderBy';
+            return $this;
+        }
+
+        return parent::orderBy($columns);
+    }
+
+    /**
+     * @return $this
+     */
+    public function and()
+    {
+        return $this;
+    }
+
+    /**
      * Magic __call.
      * 
      * @param string $name
@@ -44,8 +136,24 @@ trait ActiveQueryExtrasTrait
     {
         /* @var $modelClass ActiveRecord */
         $modelClass = $this->modelClass;
-        $mapping = $modelClass::mapping();
-        
+        $tableSchema = $modelClass::getTableSchema();
+
+        $mapping = [];
+        $reflectionClass = new ReflectionClass($modelClass);
+        if ($reflectionClass->hasMethod('mapping')) {
+            $mapping = $modelClass::mapping();
+        }
+
+        // check if method is the name of property or relation
+        $columnOrRelation = isset($mapping[$name]) ? $mapping[$name] : $tableSchema->getColumn($name);
+        if (!$columnOrRelation && $reflectionClass->hasMethod('get' . ucfirst($name))) {
+            $columnOrRelation = $name;
+        }
+
+        if ($columnOrRelation) {
+            return $this->__callColumnOrRelation($columnOrRelation, $params);
+        }
+
         // select
         if (substr($name, 0, 6) === 'select') {
             $column = lcfirst(substr($name, 6));
@@ -81,6 +189,62 @@ trait ActiveQueryExtrasTrait
         }
 
         return parent::__call($name, $params);
+    }
+
+    public function __callColumnOrRelation($name, $params = [])
+    {
+
+        if ($this->_operation === 'select') {
+            return parent::addSelect($name);
+        }
+
+        if (in_array($this->_operation, ['joinWith', 'with'])) {
+            $fn = function () { };
+
+            if (!empty($params)) {
+                if ($params[0] instanceof ActiveQuery) {
+                    $fn = $this->queryToFunction($params[0]);
+                } elseif (is_callable($params[0])) {
+                    $fn = $params[0];
+                }
+            }
+
+            return parent::{$this->_operation}([$name => $fn]);
+        }
+
+        if ($this->_operation === 'where') {
+            return $this->doFilter($name, $params);
+            // return parent::andWhere([$params[0], $name, $params[1] ?? null]);
+        }
+
+        if ($this->_operation === 'orderBy') {
+            $orderByParams = [
+                'asc' => SORT_ASC,
+                'ASC' => SORT_ASC,
+                'desc' => SORT_DESC,
+                'DESC' => SORT_DESC,
+            ];
+
+            $order = $params[0] ?? 'asc';
+            return parent::addOrderBy([$name => $orderByParams[$order] ?? SORT_ASC]);
+        }
+
+        return parent::__call($name, $params);
+    }
+
+    /**
+     * @return callable
+     */
+    public function queryToFunction(ActiveQuery $query)
+    {
+        return function (ActiveQuery $newQuery) use ($query) {
+
+            $varsToBeCopied = ['select', 'distinct', 'from', 'join', 'joinWith', 'with', 'where', 'groupBy', 'having', 'orderBy', 'params', 'limit', 'offset'];
+
+            foreach ($varsToBeCopied as $var) {
+                $newQuery->{$var} = $query->{$var};
+            }
+        };
     }
 
     /**
@@ -145,7 +309,7 @@ trait ActiveQueryExtrasTrait
     {
         $params = func_get_args();
         array_shift($params); // shift '$column'
-        
+
         $options = array_merge(['table' => $this->alias], isset($params[0]) ? $params[0] : []);
 
         $columnExpression = "{{{$options['table']}}}.$column";
@@ -170,7 +334,7 @@ trait ActiveQueryExtrasTrait
     {
         $params = func_get_args();
         array_shift($params); // shift '$relation'
-        
+
         $callback = isset($params[0]) ? $params[0] : null;
 
         return $this->with(is_callable($callback) ? [$relation => $callback] : $relation);
@@ -187,12 +351,12 @@ trait ActiveQueryExtrasTrait
     {
         $params = func_get_args();
         array_shift($params); // shift '$relation'
-        
+
         $callback = isset($params[0]) ? $params[0] : null;
         $eagerLoading = isset($params[1]) ? $params[1] : true;
         $joinType = isset($params[2]) ? $params[2] : $this->_defaultJoinType;
         $options = isset($params[3]) ? $params[3] : [];
-        
+
         // check if options is before
         if (is_array($callback) && !is_callable($callback)) {
             $options = $callback;
@@ -209,12 +373,12 @@ trait ActiveQueryExtrasTrait
             $options = $joinType;
             $joinType = $this->_defaultJoinType;
         }
-        
+
         if (isset($options['alias'])) {
             $this->_relationAliases[$relation] = $options['alias'];
             $relation = "$relation $options[alias]";
         }
-        
+
         return $this->joinWith(is_callable($callback) ? [$relation => $callback] : $relation, $eagerLoading, $joinType);
     }
 
@@ -229,7 +393,7 @@ trait ActiveQueryExtrasTrait
     {
         $params = func_get_args();
         array_shift($params); // shift '$column'
-        
+
         if (count($params) === 0) {
             $operator = '=';
             $value = true;
@@ -269,7 +433,7 @@ trait ActiveQueryExtrasTrait
     {
         $params = func_get_args();
         array_shift($params); // shift '$column'
-        
+
         $sort = isset($params[0]) ? $params[0] : SORT_ASC;
         $options = array_merge(['table' => $this->alias], isset($params[1]) ? $params[1] : []);
 
@@ -290,7 +454,7 @@ trait ActiveQueryExtrasTrait
     {
         $params = func_get_args();
         array_shift($params); // shift '$column'
-        
+
         $options = array_merge(['table' => $this->alias], isset($params[0]) ? $params[0] : []);
 
         $columnExpression = "{{{$options['table']}}}.$column";

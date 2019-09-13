@@ -2,7 +2,9 @@
 
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
+use Jaacoder\Yii2Activated\Helpers\Meta;
 use ReflectionClass;
+use Sesgo\CoreYii\Models\ActiveRecordPro;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Connection;
@@ -41,9 +43,9 @@ trait ActiveQueryExtrasTrait
      */
     public function select($columns = null, $option = null)
     {
+        $this->_operation = 'select';
 
         if ($columns === null) {
-            $this->_operation = 'select';
             return $this;
         }
 
@@ -57,8 +59,9 @@ trait ActiveQueryExtrasTrait
     {
         $args = func_get_args();
 
+        $this->_operation = 'with';
+        
         if (count($args) === 0) {
-            $this->_operation = 'with';
             return $this;
         }
 
@@ -80,13 +83,25 @@ trait ActiveQueryExtrasTrait
      */
     public function joinWith($with = null, $eagerLoading = true, $joinType = 'LEFT JOIN')
     {
+        $this->_operation = 'joinWith';
+
         if ($with === null) {
-            $this->_operation = 'joinWith';
             return $this;
         }
 
-        if ($with instanceof \Jaacoder\Yii2Activated\Helpers\Meta) {
+        // check if Meta was passed
+        if ($with instanceof Meta) {
             $with = (string) $with;
+        }
+
+        // check if ActiveQuery was passed as secong argument
+        if ($eagerLoading instanceof ActiveQuery) {
+            $with = [$with => $this->queryToFunction($eagerLoading)];
+
+            if (is_bool($joinType)) {
+                $eagerLoading = $joinType;
+                $joinType = func_get_args()[3] ?? $this->_defaultJoinType;
+            }
         }
 
         return parent::joinWith($with, $eagerLoading, $joinType);
@@ -95,14 +110,81 @@ trait ActiveQueryExtrasTrait
     /**
      * @return $this
      */
-    public function where($condition = null, $params = array())
+    public function join($type, $table = null, $on = '', $params = [])
     {
-        if ($condition === null) {
-            $this->_operation = 'where';
+        if ($type instanceof Meta || $table instanceof ActiveQuery) {
+            $args = [$type];
+            if ($this instanceof ActiveQuery) {
+                $args[] = $table;
+            }
+            $args[] = false;
+
+            return $this->joinWith(...$args);
+        }
+
+        return parent::join(...func_get_args());
+    }
+
+    /**
+     * @return $this
+     */
+    public function innerJoinWith($with = null, $eagerLoading = true)
+    {
+        $this->_operation = 'innerJoinWith';
+
+        if ($with === null) {
             return $this;
         }
 
-        return parent::where($condition, $params);
+        $args = [$with];
+
+        if ($eagerLoading instanceof ActiveQuery) {
+            $args[] = $eagerLoading;
+        }
+
+        $args[] = is_bool($eagerLoading) ? $eagerLoading : true;
+        $args[] = 'INNER JOIN';
+
+        return $this->joinWith(...$args);
+    }
+
+    /**
+     * @return $this
+     */
+    public function innerJoin($type = null, $table = null, $on = '', $params = [])
+    {
+        if ($type instanceof Meta || $table instanceof ActiveQuery) {
+            $args = [$type];
+            if ($this instanceof ActiveQuery) {
+                $args[] = $table;
+            }
+            $args[] = false;
+            $args[] = 'INNER JOIN';
+
+            return $this->joinWith(...$args);
+        }
+
+        return parent::innerJoin(...func_get_args());
+    }
+
+    /**
+     * @return $this
+     */
+    public function where($condition = null, $params = array())
+    {
+        $this->_operation = 'where';
+
+        if ($condition === null) {
+            return $this;
+        }
+
+        $args = func_get_args();
+
+        if (count($args) == 3 && is_string($args[0]) && is_string($args[1]) && in_array($args[1], $this->_operators)) {
+            $args = [[$args[1], $args[0], $args[1]]];
+        }
+
+        return parent::where(...$args);
     }
 
     /**
@@ -110,12 +192,18 @@ trait ActiveQueryExtrasTrait
      */
     public function orderBy($columns = null)
     {
+        $this->_operation = 'orderBy';
+
         if ($columns === null) {
-            $this->_operation = 'orderBy';
             return $this;
         }
 
-        return parent::orderBy($columns);
+        // check if order was passed as second argument
+        if (is_int(func_get_args()[1] ?? null)) {
+            $columns = [$columns => func_get_arg(1)];
+        }
+
+        return parent::addOrderBy($columns);
     }
 
     /**
@@ -195,10 +283,10 @@ trait ActiveQueryExtrasTrait
     {
 
         if ($this->_operation === 'select') {
-            return parent::addSelect($name);
+            return parent::addSelect("$this->escapedAlias.$name");
         }
 
-        if (in_array($this->_operation, ['joinWith', 'with'])) {
+        if (in_array($this->_operation, ['innerJoinWith', 'joinWith', 'with'])) {
             $fn = function () { };
 
             if (!empty($params)) {
@@ -213,20 +301,13 @@ trait ActiveQueryExtrasTrait
         }
 
         if ($this->_operation === 'where') {
-            return $this->doFilter($name, $params);
-            // return parent::andWhere([$params[0], $name, $params[1] ?? null]);
+            $args = array_merge([$name], $params);
+            return $this->doFilter(...$args);
         }
 
         if ($this->_operation === 'orderBy') {
-            $orderByParams = [
-                'asc' => SORT_ASC,
-                'ASC' => SORT_ASC,
-                'desc' => SORT_DESC,
-                'DESC' => SORT_DESC,
-            ];
-
-            $order = $params[0] ?? 'asc';
-            return parent::addOrderBy([$name => $orderByParams[$order] ?? SORT_ASC]);
+            $order = $params[0] ?? SORT_ASC;
+            return parent::addOrderBy(["$this->escapedAlias.$name" => $order]);
         }
 
         return parent::__call($name, $params);
@@ -239,7 +320,7 @@ trait ActiveQueryExtrasTrait
     {
         return function (ActiveQuery $newQuery) use ($query) {
 
-            $varsToBeCopied = ['select', 'distinct', 'from', 'join', 'joinWith', 'with', 'where', 'groupBy', 'having', 'orderBy', 'params', 'limit', 'offset'];
+            $varsToBeCopied = ['alias', 'select', 'distinct', 'from', 'join', 'joinWith', 'with', 'where', 'groupBy', 'having', 'orderBy', 'params', 'limit', 'offset'];
 
             foreach ($varsToBeCopied as $var) {
                 $newQuery->{$var} = $query->{$var};
@@ -499,7 +580,30 @@ trait ActiveQueryExtrasTrait
             return $this;
         }
 
+        // check if order was passed as second argument
+        if (is_int(func_get_args()[1] ?? null)) {
+            $columns = [$columns => func_get_arg(1)];
+        }
+
         return parent::addOrderBy($columns);
+    }
+
+    /**
+     * @inheritdoc
+     * @return static
+     */
+    public function groupBy($columns)
+    {
+        if ($columns instanceof ActiveQuery) {
+            if (!is_array($this->groupBy)) {
+                $this->groupBy = [];
+            }
+
+            $this->groupBy = array_values(array_unique(array_merge($this->groupBy, $columns->groupBy)));
+            return $this;
+        }
+
+        return parent::addGroupBy($columns);
     }
 
     /**

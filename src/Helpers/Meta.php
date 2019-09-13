@@ -2,36 +2,34 @@
 
 namespace Jaacoder\Yii2Activated\Helpers;
 
+use Exception;
+use Sesgo\CoreYii\Models\ActiveRecordPro;
+
 /**
  * Class Meta to save the path navigated inside one class.
  */
 class Meta implements \JsonSerializable {
 
-    private $path = '';
-    private $name = '';
+    public $path = '';
+    public $name = '';
 
     public function __construct($path = '') {
         $this->path = $path;
     }
 
     public function __get($name) {
-        return new Meta($this->pathAndName($name));
+        if ($this->path) {
+            $this->path .= '.' . $name;
+
+        } else {
+            $this->path = $name;
+        }
+
+        return $this;
     }
 
     public function __toString() {
-        return $this->pathAndName($this->name);
-    }
-
-    private function pathAndName($name = '') {
-        if (!$name) {
-            return $this->path;
-        }
-
-        if ($this->path) {
-            return $this->path . '.' . $name;
-        }
-
-        return $name;
+        return $this->path;
     }
 
     public function jsonSerialize() {

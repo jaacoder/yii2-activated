@@ -20,6 +20,8 @@ trait ActiveQueryExtrasTrait
     protected $_filterType = 'where';
     protected $_operators = ['=', '<', '<=', '>', '>=', '<>', '!=', 'in', 'not in', 'like', 'ilike', 'not like', 'not ilike', 'is', 'is not', '&'];
     protected $_operation = 'where';
+    protected $_lastOperation = 'where';
+    protected $_defaultOperation = 'where';
     private $alias;
     private $_defaultJoinType = 'LEFT JOIN';
 
@@ -39,15 +41,25 @@ trait ActiveQueryExtrasTrait
     }
 
     /**
+     * Reset operation to default one.
+     */
+    protected function resetOperation()
+    {
+        $this->_operation = $this->_defaultOperation;
+    }
+
+    /**
      * @return $this
      */
     public function select($columns = null, $option = null)
     {
-        $this->_operation = 'select';
+        $this->_operation = $this->_lastOperation = 'select';
 
         if ($columns === null) {
             return $this;
         }
+
+        $this->resetOperation();
 
         return parent::select($columns, $option);
     }
@@ -59,7 +71,7 @@ trait ActiveQueryExtrasTrait
     {
         $args = func_get_args();
 
-        $this->_operation = 'with';
+        $this->_operation = $this->_lastOperation = 'with';
         
         if (count($args) === 0) {
             return $this;
@@ -75,6 +87,8 @@ trait ActiveQueryExtrasTrait
             }
         }
 
+        $this->resetOperation();
+
         return parent::with(...$args);
     }
 
@@ -83,7 +97,7 @@ trait ActiveQueryExtrasTrait
      */
     public function joinWith($with = null, $eagerLoading = true, $joinType = 'LEFT JOIN')
     {
-        $this->_operation = 'joinWith';
+        $this->_operation = $this->_lastOperation = 'joinWith';
 
         if ($with === null) {
             return $this;
@@ -103,6 +117,8 @@ trait ActiveQueryExtrasTrait
                 $joinType = func_get_args()[3] ?? $this->_defaultJoinType;
             }
         }
+
+        $this->resetOperation();
 
         return parent::joinWith($with, $eagerLoading, $joinType);
     }
@@ -130,7 +146,7 @@ trait ActiveQueryExtrasTrait
      */
     public function innerJoinWith($with = null, $eagerLoading = true)
     {
-        $this->_operation = 'innerJoinWith';
+        $this->_operation = $this->_lastOperation = 'innerJoinWith';
 
         if ($with === null) {
             return $this;
@@ -144,6 +160,8 @@ trait ActiveQueryExtrasTrait
 
         $args[] = is_bool($eagerLoading) ? $eagerLoading : true;
         $args[] = 'INNER JOIN';
+
+        $this->resetOperation();
 
         return $this->joinWith(...$args);
     }
@@ -172,7 +190,7 @@ trait ActiveQueryExtrasTrait
      */
     public function where($condition = null, $params = array())
     {
-        $this->_operation = 'where';
+        $this->_operation = $this->_lastOperation = 'where';
 
         if ($condition === null) {
             return $this;
@@ -184,6 +202,8 @@ trait ActiveQueryExtrasTrait
             $args = [[$args[1], $args[0], $args[1]]];
         }
 
+        $this->resetOperation();
+
         return parent::where(...$args);
     }
 
@@ -192,7 +212,7 @@ trait ActiveQueryExtrasTrait
      */
     public function orderBy($columns = null)
     {
-        $this->_operation = 'orderBy';
+        $this->_operation = $this->_lastOperation = 'orderBy';
 
         if ($columns === null) {
             return $this;
@@ -203,6 +223,8 @@ trait ActiveQueryExtrasTrait
             $columns = [$columns => func_get_arg(1)];
         }
 
+        $this->resetOperation();
+
         return parent::addOrderBy($columns);
     }
 
@@ -211,6 +233,7 @@ trait ActiveQueryExtrasTrait
      */
     public function and()
     {
+        $this->_operation = $this->_lastOperation;
         return $this;
     }
 
@@ -296,20 +319,26 @@ trait ActiveQueryExtrasTrait
                     $fn = $params[0];
                 }
             }
-
+            
+            $this->resetOperation();
             return parent::{$this->_operation}([$name => $fn]);
         }
 
         if ($this->_operation === 'where') {
             $args = array_merge([$name], $params);
+
+            $this->resetOperation();
             return $this->doFilter(...$args);
         }
 
         if ($this->_operation === 'orderBy') {
             $order = $params[0] ?? SORT_ASC;
+
+            $this->resetOperation();
             return parent::addOrderBy(["$this->escapedAlias.$name" => $order]);
         }
 
+        $this->resetOperation();
         return parent::__call($name, $params);
     }
 
@@ -333,6 +362,7 @@ trait ActiveQueryExtrasTrait
      */
     public function andOpen()
     {
+        $this->resetOperation();
         return $this->open('and');
     }
 
@@ -341,6 +371,7 @@ trait ActiveQueryExtrasTrait
      */
     public function orOpen()
     {
+        $this->resetOperation();
         return $this->open('or');
     }
 

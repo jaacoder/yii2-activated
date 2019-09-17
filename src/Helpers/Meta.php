@@ -19,13 +19,10 @@ class Meta implements \JsonSerializable {
 
     public function __get($name) {
         if ($this->path) {
-            $this->path .= '.' . $name;
-
-        } else {
-            $this->path = $name;
+            return new Meta($this->path . '.' . $name);
         }
 
-        return $this;
+        return new Meta($name);
     }
 
     public function __toString() {

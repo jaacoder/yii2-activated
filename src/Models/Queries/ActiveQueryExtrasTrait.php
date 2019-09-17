@@ -126,7 +126,7 @@ trait ActiveQueryExtrasTrait
     /**
      * @return $this
      */
-    public function join($type, $table = null, $on = '', $params = [])
+    public function join($type = null, $table = null, $on = '', $params = [])
     {
         if ($type instanceof Meta || $table instanceof ActiveQuery) {
             $args = [$type];
@@ -320,8 +320,9 @@ trait ActiveQueryExtrasTrait
                 }
             }
             
+            $return = parent::{$this->_operation}([$name => $fn]);
             $this->resetOperation();
-            return parent::{$this->_operation}([$name => $fn]);
+            return $return;
         }
 
         if ($this->_operation === 'where') {

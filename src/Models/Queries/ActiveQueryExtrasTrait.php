@@ -171,6 +171,12 @@ trait ActiveQueryExtrasTrait
      */
     public function innerJoin($type = null, $table = null, $on = '', $params = [])
     {
+        $this->_operation = $this->_lastOperation = 'innerJoin';
+
+        if ($type === null) {
+            return $this;
+        }
+
         if ($type instanceof Meta || $table instanceof ActiveQuery) {
             $args = [$type];
             if ($this instanceof ActiveQuery) {
@@ -182,6 +188,7 @@ trait ActiveQueryExtrasTrait
             return $this->joinWith(...$args);
         }
 
+        $this->resetOperation();
         return parent::innerJoin(...func_get_args());
     }
 
@@ -309,7 +316,7 @@ trait ActiveQueryExtrasTrait
             return parent::addSelect("$this->escapedAlias.$name");
         }
 
-        if (in_array($this->_operation, ['innerJoinWith', 'joinWith', 'with'])) {
+        if (in_array($this->_operation, ['innerJoinWith', 'joinWith', 'with', 'innerJoin'])) {
             $fn = function () { };
 
             if (!empty($params)) {
@@ -319,8 +326,14 @@ trait ActiveQueryExtrasTrait
                     $fn = $params[0];
                 }
             }
+
+            $args = [];
+            if ($this->_operation === 'innerJoin') {
+                $this->_operation = 'innerJoinWith';
+                $args = [false, 'INNER JOIN'];
+            }
             
-            $return = parent::{$this->_operation}([$name => $fn]);
+            $return = parent::{$this->_operation}([$name => $fn], ...$args);
             $this->resetOperation();
             return $return;
         }

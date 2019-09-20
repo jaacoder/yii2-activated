@@ -7,5 +7,5 @@ namespace Jaacoder\Yii2Activated\Helpers;
  */
 interface SimpleEnum
 {
-    public static function map();
+    public static function getMap();
 }

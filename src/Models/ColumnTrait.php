@@ -2,7 +2,7 @@
 
 namespace Jaacoder\Yii2Activated\Models;
 
-use Jaacoder\Yii2Activated\Helpers\Column;
+use Jaacoder\Yii2Activated\Models\Column;
 
 /**
  * Add the possibility of using meta inside any class.

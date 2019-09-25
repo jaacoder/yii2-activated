@@ -1,6 +1,6 @@
 <?php
 
-namespace Jaacoder\Yii2Activated\Helpers;
+namespace Jaacoder\Yii2Activated\Models;
 
 use Exception;
 use JsonSerializable;

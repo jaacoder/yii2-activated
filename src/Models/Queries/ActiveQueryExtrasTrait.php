@@ -128,6 +128,14 @@ trait ActiveQueryExtrasTrait
      */
     public function join($type = null, $table = null, $on = '', $params = [])
     {
+        $this->_operation = $this->_lastOperation = 'join';
+
+        if ($type === null) {
+            return $this;
+        }
+
+        $this->resetOperation();
+
         if ($type instanceof Meta || $table instanceof ActiveQuery) {
             $args = [$type];
             if ($this instanceof ActiveQuery) {
@@ -316,7 +324,7 @@ trait ActiveQueryExtrasTrait
             return parent::addSelect("$this->escapedAlias.$name");
         }
 
-        if (in_array($this->_operation, ['innerJoinWith', 'joinWith', 'with', 'innerJoin'])) {
+        if (in_array($this->_operation, ['innerJoinWith', 'joinWith', 'with', 'innerJoin', 'join'])) {
             $fn = function () { };
 
             if (!empty($params)) {
@@ -331,6 +339,10 @@ trait ActiveQueryExtrasTrait
             if ($this->_operation === 'innerJoin') {
                 $this->_operation = 'innerJoinWith';
                 $args = [false, 'INNER JOIN'];
+
+            } else if ($this->_operation === 'join') {
+                $this->_operation = 'innerJoinWith';
+                $args = [false, 'LEFT JOIN'];
             }
             
             $return = parent::{$this->_operation}([$name => $fn], ...$args);
@@ -350,6 +362,11 @@ trait ActiveQueryExtrasTrait
 
             $this->resetOperation();
             return parent::addOrderBy(["$this->escapedAlias.$name" => $order]);
+        }
+
+        if ($this->_operation === 'groupBy') {
+            $this->resetOperation();
+            return parent::addGroupBy("$this->escapedAlias.$name");
         }
 
         $this->resetOperation();
@@ -637,8 +654,16 @@ trait ActiveQueryExtrasTrait
      * @inheritdoc
      * @return static
      */
-    public function groupBy($columns)
+    public function groupBy($columns = null)
     {
+        $this->_operation = $this->_lastOperation = 'groupBy';
+
+        if ($columns === null) {
+            return $this;
+        }
+
+        $this->resetOperation();
+
         if ($columns instanceof ActiveQuery) {
             if (!is_array($this->groupBy)) {
                 $this->groupBy = [];

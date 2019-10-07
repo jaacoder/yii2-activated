@@ -337,11 +337,11 @@ trait ActiveQueryExtrasTrait
 
             $args = [];
             if ($this->_operation === 'innerJoin') {
-                $this->_operation = 'innerJoinWith';
+                $this->_operation = 'joinWith';
                 $args = [false, 'INNER JOIN'];
 
             } else if ($this->_operation === 'join') {
-                $this->_operation = 'innerJoinWith';
+                $this->_operation = 'joinWith';
                 $args = [false, 'LEFT JOIN'];
             }
             

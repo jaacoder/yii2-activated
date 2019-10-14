@@ -214,7 +214,7 @@ trait ActiveQueryExtrasTrait
         $args = func_get_args();
 
         if (count($args) == 3 && is_string($args[0]) && is_string($args[1]) && in_array($args[1], $this->_operators)) {
-            $args = [[$args[1], $args[0], $args[1]]];
+            $args = [[$args[1], $args[0], $args[2]]];
         }
 
         $this->resetOperation();

@@ -13,6 +13,7 @@
 /* @var $rules string[] list of validation rules */
 /* @var $relations array list of relations (name => relation declaration) */
 
+
 if (!function_exists('normalizeRelation')) {
     function normalizeRelation($relation)
     {

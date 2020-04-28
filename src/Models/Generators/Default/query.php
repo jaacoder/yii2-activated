@@ -19,6 +19,7 @@ if ($generator->ns !== $generator->queryNs) {
     $modelFullClassName = '\\' . $generator->ns . '\\' . $modelFullClassName;
 }
 
+
 echo "<?php\n";
 ?>
 

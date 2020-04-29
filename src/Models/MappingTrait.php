@@ -2,13 +2,13 @@
 
 namespace Jaacoder\Yii2Activated\Models;
 
-/**
- * Trait MappingTrait.
- *
- * @author jaacoder
- */
+use yii\db\ActiveRecord;
+
 trait MappingTrait
 {
+    // whether or not to show extra fields with fields() method
+    protected $_autoExtraFields = true;
+
     /**
      * Property to column mapping.
      * 
@@ -120,5 +120,18 @@ trait MappingTrait
     public function getErrors($attribute = null)
     {
         return static::mapToProperties(parent::getErrors());
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function fields()
+    {
+        $fields = static::mapToProperties(parent::fields());
+
+        if ($this->_autoExtraFields)
+            return array_merge($fields, parent::extraFields());
+
+        return $fields;
     }
 }

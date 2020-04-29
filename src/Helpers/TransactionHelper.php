@@ -5,9 +5,6 @@ namespace Jaacoder\Yii2Activated\Helpers;
 use Yii;
 use yii\db\Connection;
 
-/**
- * Class TransactionHelper.
- */
 class TransactionHelper
 {
 
@@ -20,7 +17,6 @@ class TransactionHelper
     public static function getConnections()
     {
         static $connections = null;
-
 
         if ($connections === null) {
             $connections = [];

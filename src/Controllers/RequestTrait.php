@@ -4,11 +4,12 @@ namespace Jaacoder\Yii2Activated\Controllers;
 
 use AdBar\Dot;
 use Yii;
+use yii\base\Request;
+use yii\base\Response;
 
 /**
- * Trait RequestTrait.
- *
- * @author jaacoder
+ * @property Request $request
+ * @property Response $response
  */
 trait RequestTrait
 {
@@ -30,5 +31,21 @@ trait RequestTrait
         }
 
         return $postDotNotation->get($name, $defaultValue);
+    }
+
+    /**
+     * @return Request
+     */
+    public function getRequest()
+    {
+        return Yii::$app->request;
+    }
+
+    /**
+     * @return Response
+     */
+    public function getResponse()
+    {
+        return Yii::$app->response;
     }
 }

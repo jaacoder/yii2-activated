@@ -4,11 +4,6 @@ namespace Jaacoder\Yii2Activated\Controllers;
 
 use AdBar\Dot;
 
-/**
- * Class MessagesTrait.
- *
- * @author jaacoder
- */
 trait MessagesTrait
 {
     /**
@@ -22,10 +17,6 @@ trait MessagesTrait
     public function initMessages($property = 'messages')
     {
         $this->{$property} = [];
-        
-        if (isset($this->_dynamicProperties)) {
-            $this->_dynamicProperties['messages'] = true;
-        }
         
         $this->_dotMessages = new Dot();
         $this->_dotMessages->setDataAsRef($this->{$property});

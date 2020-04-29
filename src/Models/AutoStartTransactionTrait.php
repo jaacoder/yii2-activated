@@ -5,12 +5,11 @@ namespace Jaacoder\Yii2Activated\Models;
 use yii\base\ModelEvent;
 use yii\db\ActiveRecord;
 
-/**
- * Class TransactionHandlerTrait.
- */
 trait AutoStartTransactionTrait
 {
-
+    /**
+     * Config model to start transaction automatically
+     */
     public function initAutoStartTransaction()
     {
         $handler = function(ModelEvent $modelEvent) {

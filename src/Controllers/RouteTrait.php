@@ -3,14 +3,9 @@
 namespace Jaacoder\Yii2Activated\Controllers;
 
 use ReflectionClass;
-use ReflectionParameter;
 use Yii;
 
 /**
- * Trait RouteTrait.
- *
- * @author jaacoder
- * 
  * @property array $defaultActions
  */
 trait RouteTrait

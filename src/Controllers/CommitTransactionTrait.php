@@ -4,11 +4,6 @@ namespace Jaacoder\Yii2Activated\Controllers;
 
 use Jaacoder\Yii2Activated\Helpers\TransactionHelper;
 
-/**
- * Trait CommitTransactionTrait.
- *
- * @author jaacoder
- */
 trait CommitTransactionTrait
 {
     /**

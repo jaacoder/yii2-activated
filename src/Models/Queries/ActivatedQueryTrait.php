@@ -2,12 +2,20 @@
 
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
+use function Stringy\create as s;
+use Jaacoder\Yii2Activated\Helpers\Meta;
+use phpDocumentor\Reflection\Types\This;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
 trait ActivatedQueryTrait
 {
+    protected $addOperations = ['select', 'orderBy', 'groupBy'];
+    protected $andOrOperations = ['where', 'onCondition', 'having'];
+
     protected $_aliasesModels = [];
+    protected $_operation = 'andWhere';
+    protected $_defaultOperation = 'andWhere';
 
     /**
      * @return $this
@@ -24,8 +32,9 @@ trait ActivatedQueryTrait
      */
     protected function adjustSelectGroupByColumns($columns)
     {
-        if (is_string($columns)) {
-            $columns = $this->mapToColumnInExpression($columns);
+        if (is_string($columns) || $columns instanceof Meta) {
+            $columns = $this->mapToColumnInExpression('' . $columns);
+
         } else if (is_array($columns)) {
             $newColumns = [];
             foreach ($columns as $i => $column) {
@@ -46,17 +55,63 @@ trait ActivatedQueryTrait
     /**
      * @return $this
      */
-    public function select($columns, $option = null)
+    public function select($columns = null, $option = null)
     {
-        return parent::select($this->adjustSelectGroupByColumns($columns), $option);
+        return $this->checkArgSaveOperation($columns) ?? parent::select($this->adjustSelectGroupByColumns($columns), $option);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addSelect($columns)
+    public function addSelect($columns = null)
     {
-        return parent::addSelect($this->adjustSelectGroupByColumns($columns));
+        return $this->checkArgSaveOperation($columns) ?? parent::addSelect($this->adjustSelectGroupByColumns($columns));
+    }
+
+    /**
+     * @return $this
+     */
+    public function  and (...$args) {
+        $sOperation = s($this->_operation);
+
+        if (!$sOperation->startsWith('and') && !$sOperation->startsWith('add')) {
+
+            if (in_array($this->_operation, $this->addOperations)) {
+                $this->_operation = 'add' . $sOperation->upperCaseFirst();
+
+            } else {
+                $this->_operation = (string) $sOperation->removeLeft('or')
+                    ->upperCaseFirst()
+                    ->ensureLeft('and');
+            }
+        }
+
+        if (!empty($args)) {
+            call_user_func_array([$this, $this->_operation], $args);
+            $this->saveNextOperation();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function  or (...$args) {
+        $sOperation = s($this->_operation);
+
+        if (!$sOperation->startsWith('or')) {
+            $this->_operation = (string) $sOperation->removeLeft('and')
+                ->upperCaseFirst()
+                ->ensureLeft('or');
+        }
+
+        if (!empty($args)) {
+            call_user_func_array([$this, $this->_operation], $args);
+            $this->saveNextOperation();
+        }
+
+        return $this;
     }
 
     /**
@@ -65,20 +120,35 @@ trait ActivatedQueryTrait
      */
     protected function adjustJoinWithArgs($with, $eagerLoading = true, $joinType = null)
     {
+        // convert to string if needed
+        if ($with instanceof Meta) {
+            $with .= '';
+
+        } else if (is_array($with)) {
+            $newWith = [];
+            foreach($with as $key => $value) {
+                $newWith['' . $key] = $value;
+            }
+
+            $with = $newWith;
+        }
+
         // adjust query to callable
         if ($eagerLoading instanceof ActiveQuery) {
             $query = $eagerLoading;
             $args = func_get_args();
             $eagerLoading = isset($joinType) ? $joinType : true;
-            if (isset($args[3]))
+            if (isset($args[3])) {
                 $joinType = $args[3];
+            }
 
             $with = [$with => $this->queryToFunction($query)];
         }
 
         $response = [$with, $eagerLoading];
-        if ($joinType !== null)
+        if ($joinType !== null) {
             array_push($response, $joinType);
+        }
 
         return $response;
     }
@@ -86,17 +156,17 @@ trait ActivatedQueryTrait
     /**
      * {@inheritdoc}
      */
-    public function innerJoinWith($with, $eagerLoading = true)
+    public function innerJoinWith($with = null, $eagerLoading = true)
     {
-        return parent::innerJoinWith(...$this->adjustJoinWithArgs($with, $eagerLoading));
+        return $this->checkArgSaveOperation($with) ?? parent::innerJoinWith(...$this->adjustJoinWithArgs($with, $eagerLoading));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function joinWith($with, $eagerLoading = true, $joinType = 'LEFT JOIN')
+    public function joinWith($with = null, $eagerLoading = true, $joinType = 'LEFT JOIN')
     {
-        return parent::joinWith(...$this->adjustJoinWithArgs(...func_get_args()));
+        return $this->checkArgSaveOperation($with) ?? parent::joinWith(...$this->adjustJoinWithArgs(...func_get_args()));
     }
 
     /**
@@ -106,11 +176,19 @@ trait ActivatedQueryTrait
     {
         $args = func_get_args();
 
+        $this->saveOperation();
+
+        if (empty($args)) {
+            return $this;    
+        }
+
         // adjust query to callable
         if (isset($args[1]) && $args[1] instanceof ActiveQuery) {
             $args[0] = [$args[0] => $this->queryToFunction($args[1])];
             array_pop($args);
         }
+
+        $this->saveNextOperation();
 
         return parent::with(...$args);
     }
@@ -141,25 +219,32 @@ trait ActivatedQueryTrait
         // adjust operator order
         if (count($args) >= 3) {
             $params = [];
-            $condition = [$args[1], $this->mapToColumnInExpression($args[0]), $args[2]];
+            $condition = [$args[1], $this->mapToColumnInExpression('' . $args[0]), $args[2]];
 
-            if (isset($args[3]))
+            if (isset($args[3])) {
                 array_push($condition, $args[3]);
-        } else if (is_string($condition)) {
-            $condition = $this->mapToColumnInExpression($condition);
+            }
+
+        } else if (is_string($condition) || $condition instanceof Meta) {
+            $condition = $this->mapToColumnInExpression('' . $condition);
+
         } else if (is_array($condition)) {
 
             $newColumns = [];
             foreach ($condition as $column => $value) {
-                if (!is_string($column)) {
+                if (!is_string($column) && !($column instanceof Meta)) {
                     $newColumns = $condition;
                     break;
                 }
 
-                $newColumns[$this->mapToColumnInExpression($column)] = $value;
+                $newColumns[$this->mapToColumnInExpression('' . $column)] = $value;
             }
 
             $condition = $newColumns;
+        }
+
+        if ($condition instanceof Meta) {
+            $condition .= ''; // convert to string
         }
 
         return [$condition, $params];
@@ -168,25 +253,25 @@ trait ActivatedQueryTrait
     /**
      * {@inheritdoc}
      */
-    public function where($condition, $params = [])
+    public function where($condition = null, $params = [])
     {
-        return parent::where(...$this->adjustWhereArgs(null, ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::where(...$this->adjustWhereArgs(null, ...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function andWhere($condition, $params = [])
+    public function andWhere($condition = null, $params = [])
     {
-        return parent::andWhere(...$this->adjustWhereArgs('where', ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::andWhere(...$this->adjustWhereArgs('where', ...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function orWhere($condition, $params = [])
+    public function orWhere($condition = null, $params = [])
     {
-        return parent::orWhere(...$this->adjustWhereArgs('where', ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::orWhere(...$this->adjustWhereArgs('where', ...func_get_args()));
     }
 
     /**
@@ -216,41 +301,41 @@ trait ActivatedQueryTrait
     /**
      * {@inheritdoc}
      */
-    public function onCondition($condition, $params = [])
+    public function onCondition($condition = null, $params = [])
     {
-        return parent::onCondition(...$this->adjustWhereArgs(null, ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::onCondition(...$this->adjustWhereArgs(null, ...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function andOnCondition($condition, $params = [])
+    public function andOnCondition($condition = null, $params = [])
     {
-        return parent::andOnCondition(...$this->adjustWhereArgs('on', ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::andOnCondition(...$this->adjustWhereArgs('on', ...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function orOnCondition($condition, $params = [])
+    public function orOnCondition($condition = null, $params = [])
     {
-        return parent::orOnCondition(...$this->adjustWhereArgs('on', ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::orOnCondition(...$this->adjustWhereArgs('on', ...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function groupBy($columns)
+    public function groupBy($columns = null)
     {
-        return parent::groupBy($this->adjustSelectGroupByColumns($columns));
+        return $this->checkArgSaveOperation($columns) ?? parent::groupBy($this->adjustSelectGroupByColumns($columns));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addGroupBy($columns)
+    public function addGroupBy($columns = null)
     {
-        return parent::addGroupBy($this->adjustSelectGroupByColumns($columns));
+        return $this->checkArgSaveOperation($columns) ?? parent::addGroupBy($this->adjustSelectGroupByColumns($columns));
     }
 
     /**
@@ -262,6 +347,11 @@ trait ActivatedQueryTrait
     {
         $orders = ['asc' => SORT_ASC, 'desc' => SORT_DESC];
 
+        // convert to string if needed
+        if ($columns instanceof Meta) {
+            $columns .= '';
+        }
+
         if (is_string($columns) && $order !== null) {
             $lowercaseOrder = strtolower($order);
             $columns = [$columns => isset($orders[$lowercaseOrder]) ? $orders[$lowercaseOrder] : $order];
@@ -269,10 +359,11 @@ trait ActivatedQueryTrait
 
         if (is_string($columns)) {
             $columns = $this->mapToColumnInExpression($columns);
+
         } else if (is_array($columns)) {
             $newColumns = [];
             foreach ($columns as $columns => $order) {
-                $newColumns[$this->mapToColumnInExpression($columns)] = $order;
+                $newColumns[$this->mapToColumnInExpression('' . $columns)] = $order;
             }
 
             $columns = $newColumns;
@@ -284,25 +375,25 @@ trait ActivatedQueryTrait
     /**
      * {@inheritdoc}
      */
-    public function having($condition, $params = [])
+    public function having($condition = null, $params = [])
     {
-        return parent::having(...$this->adjustWhereArgs(null, ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::having(...$this->adjustWhereArgs(null, ...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function andHaving($condition, $params = [])
+    public function andHaving($condition = null, $params = [])
     {
-        return parent::andHaving(...$this->adjustWhereArgs('having', ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::andHaving(...$this->adjustWhereArgs('having', ...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function orHaving($condition, $params = [])
+    public function orHaving($condition = null, $params = [])
     {
-        return parent::orHaving(...$this->adjustWhereArgs('having', ...func_get_args()));
+        return $this->checkArgSaveOperation($condition) ?? parent::orHaving(...$this->adjustWhereArgs('having', ...func_get_args()));
     }
 
     /**
@@ -332,17 +423,17 @@ trait ActivatedQueryTrait
     /**
      * {@inheritdoc}
      */
-    public function orderBy($columns)
+    public function orderBy($columns = null)
     {
-        return parent::orderBy($this->adjustOrderByColumns(...func_get_args()));
+        return $this->checkArgSaveOperation($columns) ?? parent::orderBy($this->adjustOrderByColumns(...func_get_args()));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addOrderBy($columns)
+    public function addOrderBy($columns = null)
     {
-        return parent::addOrderBy($this->adjustOrderByColumns(...func_get_args()));
+        return $this->checkArgSaveOperation($columns) ?? parent::addOrderBy($this->adjustOrderByColumns(...func_get_args()));
     }
 
     /**
@@ -365,13 +456,18 @@ trait ActivatedQueryTrait
     }
 
     /**
+     * @property string $property
      * @property string $modelClass
-     * @property _ActiveRecord $property
      */
-    protected function mapToColumn($property, $modelClass = null)
+    protected function mapToColumn(string $property, $modelClass = null)
     {
-        if ($modelClass === null)
+        // return $property;
+
+        $property .= ''; // convert to string
+
+        if ($modelClass === null) {
             $modelClass = $this->modelClass;
+        }
 
         $mapping = [];
 
@@ -391,10 +487,12 @@ trait ActivatedQueryTrait
     /**
      * @param string $expression
      */
-    protected function mapToColumnInExpression($expression)
+    protected function mapToColumnInExpression(string $expression)
     {
+        // return $expression;
+
         // rename column and prefix table
-        if (preg_match('/^[a-zA-Z_][a-zA-Z_0-9]*$/', $expression)) {   // $expression is just column name
+        if (preg_match('/^[a-zA-Z_][a-zA-Z_0-9]*$/', $expression)) { // $expression is just column name
 
             $column = $this->mapToColumn($expression);
 
@@ -412,8 +510,9 @@ trait ActivatedQueryTrait
 
                 $column = $this->mapToColumn($matches[2]);
 
-                if ($matches[1] === '.' || !$this->isColumn($column))
+                if ($matches[1] === '.' || !$this->isColumn($column)) {
                     return $matches[0];
+                }
 
                 // rename property to column name
                 return $matches[1] . '{{' . $this->getTableNameAndAlias()[1] . '}}.[[' . $column . ']]';
@@ -421,8 +520,9 @@ trait ActivatedQueryTrait
 
             $expression = preg_replace_callback('/(\w+)\.([a-zA-Z_][a-zA-Z_0-9]*)(.?)/', function ($matches) use ($expression) {
 
-                if (in_array($matches[3], ['}', ']']))
+                if (in_array($matches[3], ['}', ']'])) {
                     return $matches[0];
+                }
 
                 $modelClass = null;
 
@@ -431,7 +531,7 @@ trait ActivatedQueryTrait
                 } else if (isset($this->_aliasesModels[$matches[1]])) {
                     $modelClass = $this->_aliasesModels[$matches[1]];
                 }
-                
+
                 $column = $this->mapToColumn($matches[2], $modelClass);
 
                 if ($modelClass && $this->isColumn($column)) {
@@ -460,12 +560,66 @@ trait ActivatedQueryTrait
             }
         };
     }
-}
 
-
-class _ActiveRecord
-{
-    public static function mapping()
+    /**
+     * {@inheritdoc}
+     *
+     * @param string $name
+     * @param array $params
+     */
+    public function __call($name, $params)
     {
+        $args = array_merge([$name], $params);
+        call_user_func_array([$this, $this->_operation], $args);
+
+        $this->saveNextOperation();
+
+        return $this;
+    }
+
+    /**
+     * Check args and save operation.
+     * 
+     * @param mixed $arg
+     * @return $this|null
+     */
+    protected function checkArgSaveOperation($arg)
+    {
+        $this->saveOperation(4);
+
+        if ($arg === null) {
+            return $this;
+        }
+
+        $this->saveNextOperation();
+    }
+
+    /**
+     * Save current operation.
+     */
+    protected function saveOperation($level = 3)
+    {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $level);
+
+        // change operation if not called inside this object
+        // ex.: select() called by addSelect() internally
+        if (!is_a($this, $backtrace[$level - 1]['class'] ?? '')) {
+            $this->_operation = $backtrace[$level - 2]['function'];
+        }
+    }
+
+    /**
+     * Save next operation.
+     */
+    protected function saveNextOperation()
+    {
+        $sOperation = s($this->_operation);
+
+        if (in_array($this->_operation, $this->addOperations)) {
+            $this->_operation = 'add' . $sOperation->upperCaseFirst();
+
+        } else if (in_array($this->_operation, $this->andOrOperations)) {
+            $this->_operation = 'and' . $sOperation->upperCaseFirst();
+        }
     }
 }

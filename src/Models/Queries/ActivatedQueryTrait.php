@@ -14,7 +14,7 @@ trait ActivatedQueryTrait
     protected $andOrOperations = ['where', 'onCondition', 'having'];
 
     protected $_aliasesModels = [];
-    protected _clause = 'andWhere';
+    protected $_clause = 'andWhere';
     protected $_defaultOperation = 'andWhere';
 
     /**

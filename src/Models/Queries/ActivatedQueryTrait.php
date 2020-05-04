@@ -14,7 +14,7 @@ trait ActivatedQueryTrait
     protected $andOrOperations = ['where', 'onCondition', 'having'];
 
     protected $_aliasesModels = [];
-    protected $_operation = 'andWhere';
+    protected _clause = 'andWhere';
     protected $_defaultOperation = 'andWhere';
 
     /**
@@ -72,23 +72,23 @@ trait ActivatedQueryTrait
      * @return $this
      */
     public function  and (...$args) {
-        $sOperation = s($this->_operation);
+        $sOperation = s($this->_clause);
 
         if (!$sOperation->startsWith('and') && !$sOperation->startsWith('add')) {
 
-            if (in_array($this->_operation, $this->addOperations)) {
-                $this->_operation = 'add' . $sOperation->upperCaseFirst();
+            if (in_array($this->_clause, $this->addOperations)) {
+                $this->_clause = 'add' . $sOperation->upperCaseFirst();
 
             } else {
-                $this->_operation = (string) $sOperation->removeLeft('or')
+                $this->_clause = (string) $sOperation->removeLeft('or')
                     ->upperCaseFirst()
                     ->ensureLeft('and');
             }
         }
 
         if (!empty($args)) {
-            call_user_func_array([$this, $this->_operation], $args);
-            $this->saveNextOperation();
+            call_user_func_array([$this, $this->_clause], $args);
+            $this->saveNextClause();
         }
 
         return $this;
@@ -98,17 +98,17 @@ trait ActivatedQueryTrait
      * @return $this
      */
     public function  or (...$args) {
-        $sOperation = s($this->_operation);
+        $sOperation = s($this->_clause);
 
         if (!$sOperation->startsWith('or')) {
-            $this->_operation = (string) $sOperation->removeLeft('and')
+            $this->_clause = (string) $sOperation->removeLeft('and')
                 ->upperCaseFirst()
                 ->ensureLeft('or');
         }
 
         if (!empty($args)) {
-            call_user_func_array([$this, $this->_operation], $args);
-            $this->saveNextOperation();
+            call_user_func_array([$this, $this->_clause], $args);
+            $this->saveNextClause();
         }
 
         return $this;
@@ -176,7 +176,7 @@ trait ActivatedQueryTrait
     {
         $args = func_get_args();
 
-        $this->saveOperation();
+        $this->saveClause();
 
         if (empty($args)) {
             return $this;    
@@ -188,7 +188,7 @@ trait ActivatedQueryTrait
             array_pop($args);
         }
 
-        $this->saveNextOperation();
+        $this->saveNextClause();
 
         return parent::with(...$args);
     }
@@ -570,9 +570,9 @@ trait ActivatedQueryTrait
     public function __call($name, $params)
     {
         $args = array_merge([$name], $params);
-        call_user_func_array([$this, $this->_operation], $args);
+        call_user_func_array([$this, $this->_clause], $args);
 
-        $this->saveNextOperation();
+        $this->saveNextClause();
 
         return $this;
     }
@@ -585,41 +585,41 @@ trait ActivatedQueryTrait
      */
     protected function checkArgSaveOperation($arg)
     {
-        $this->saveOperation(4);
+        $this->saveClause(4);
 
         if ($arg === null) {
             return $this;
         }
 
-        $this->saveNextOperation();
+        $this->saveNextClause();
     }
 
     /**
      * Save current operation.
      */
-    protected function saveOperation($level = 3)
+    protected function saveClause($level = 3)
     {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $level);
 
         // change operation if not called inside this object
         // ex.: select() called by addSelect() internally
         if (!is_a($this, $backtrace[$level - 1]['class'] ?? '')) {
-            $this->_operation = $backtrace[$level - 2]['function'];
+            $this->_clause = $backtrace[$level - 2]['function'];
         }
     }
 
     /**
      * Save next operation.
      */
-    protected function saveNextOperation()
+    protected function saveNextClause()
     {
-        $sOperation = s($this->_operation);
+        $sOperation = s($this->_clause);
 
-        if (in_array($this->_operation, $this->addOperations)) {
-            $this->_operation = 'add' . $sOperation->upperCaseFirst();
+        if (in_array($this->_clause, $this->addOperations)) {
+            $this->_clause = 'add' . $sOperation->upperCaseFirst();
 
-        } else if (in_array($this->_operation, $this->andOrOperations)) {
-            $this->_operation = 'and' . $sOperation->upperCaseFirst();
+        } else if (in_array($this->_clause, $this->andOrOperations)) {
+            $this->_clause = 'and' . $sOperation->upperCaseFirst();
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Jaacoder\Yii2Activated\Models\Queries;
 
+use Exception;
 use function Stringy\create as s;
 use Jaacoder\Yii2Activated\Helpers\Meta;
 use phpDocumentor\Reflection\Types\This;
@@ -73,22 +74,23 @@ trait ActivatedQueryTrait
      * @return $this
      */
     public function  and (...$args) {
-        $sOperation = s($this->_clauses);
+        $sClause = s($this->_clauses[0] ?? $this->_lastClause)
+            ->removeLeft('or')
+            ->lowerCaseFirst();
 
-        if (!$sOperation->startsWith('and') && !$sOperation->startsWith('add')) {
+        $function = (string) $sClause;
 
-            if (in_array($this->_clauses, $this->addOperations)) {
-                $this->_clauses = 'add' . $sOperation->upperCaseFirst();
+        if (in_array($function, $this->addOperations)) {
+            $function = 'add' . $sClause->upperCaseFirst();
 
-            } else {
-                $this->_clauses = (string) $sOperation->removeLeft('or')
-                    ->upperCaseFirst()
-                    ->ensureLeft('and');
-            }
+        } else if (in_array($function, $this->andOrOperations)) {
+            $function = 'and' . $sClause->upperCaseFirst();
         }
 
+        $this->saveClause($function);
+
         if (!empty($args)) {
-            call_user_func_array([$this, $this->_clauses], $args);
+            call_user_func_array([$this, $function], $args);
             $this->resetClause();
         }
 
@@ -99,16 +101,20 @@ trait ActivatedQueryTrait
      * @return $this
      */
     public function  or (...$args) {
-        $sOperation = s($this->_clauses);
+        $sClause = s($this->_clauses[0] ?? $this->_lastClause)
+            ->removeLeft('and')
+            ->lowerCaseFirst();
 
-        if (!$sOperation->startsWith('or')) {
-            $this->_clauses = (string) $sOperation->removeLeft('and')
-                ->upperCaseFirst()
-                ->ensureLeft('or');
+        $function = (string) $sClause;
+
+        if (in_array($function, $this->andOrOperations)) {
+            $function = 'or' . $sClause->upperCaseFirst();
         }
 
+        $this->saveClause($function);
+
         if (!empty($args)) {
-            call_user_func_array([$this, $this->_clauses], $args);
+            call_user_func_array([$this, $function], $args);
             $this->resetClause();
         }
 
@@ -164,7 +170,7 @@ trait ActivatedQueryTrait
 
     /**
      * @see self::innerJoinWith
-     * 
+     *
      * @param mixed $with
      * @param ActiveQuery $activeQuery
      * @return $this
@@ -184,7 +190,7 @@ trait ActivatedQueryTrait
 
     /**
      * @see self::joinWith
-     * 
+     *
      * @param mixed $with
      * @param ActiveQuery $activeQuery
      * @return $this
@@ -600,6 +606,8 @@ trait ActivatedQueryTrait
 
         $sClause = s($this->_clauses[0]);
 
+        // print 'clause 0: ' . $sClause . "\n";
+
         if (!$sClause->isBlank()) {
 
             $args = array_merge([$name], $params);
@@ -609,7 +617,16 @@ trait ActivatedQueryTrait
                 $args[] = false;
             }
 
+            // print 'clause 1: ' . $sClause . "\n";
+
+            if (!method_exists($this, (string) $sClause)) {
+                throw new Exception('Unexistent method: ' . self::class . '->' . $sClause);
+            }
+
             call_user_func_array([$this, (string) $sClause], $args);
+
+            // print 'clause 2: ' . $sClause . "\n";
+            // print 'lastClause: ' . $this->_lastClause . "\n";
 
             $this->resetClause(true);
         }
@@ -647,7 +664,7 @@ trait ActivatedQueryTrait
 
     /**
      * Save next operation.
-     * 
+     *
      * @param bool $force
      */
     protected function resetClause($force = false)

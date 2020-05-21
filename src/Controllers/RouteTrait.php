@@ -16,11 +16,11 @@ trait RouteTrait
     public function getDefaultActions()
     {
         return [
-            'GET' => $this->defaultAction,
-            'POST' => $this->defaultAction,
-            'PUT' => $this->defaultAction,
-            'PATCH' => $this->defaultAction,
-            'DELETE' => $this->defaultAction,
+            'GET' => 'index',
+            'POST' => 'store',
+            'PUT' => 'update',
+            'PATCH' => 'update',
+            'DELETE' => 'delete',
         ];
     }
     

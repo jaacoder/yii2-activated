@@ -7,6 +7,7 @@ trait ActivatedRecordTrait
     use AutoStartTransactionTrait;
     use MappingTrait;
     use QueryExtraTrait;
+    use ColumnTrait;
 
     /**
      * Initialize traits.

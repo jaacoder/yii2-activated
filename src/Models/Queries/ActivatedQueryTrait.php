@@ -19,6 +19,9 @@ trait ActivatedQueryTrait
     protected $_lastClause = '';
     protected $_defaultClause = 'andWhere';
 
+    protected $_ignoreEmpty = false;
+    protected $_ignoreNull = false;
+
     /**
      * @return $this
      */
@@ -118,6 +121,26 @@ trait ActivatedQueryTrait
             $this->resetClause();
         }
 
+        return $this;
+    }
+
+    /**
+     * Ignore next parameter if empty.
+     * return $this
+     */
+    function ignoreEmpty()
+    {
+        $this->_ignoreEmpty = true;
+        return $this;
+    }
+
+    /**
+     * Ignore next parameter if null.
+     * return $this
+     */
+    function ignoreNull()
+    {
+        $this->_ignoreNull = true;
         return $this;
     }
 
@@ -564,8 +587,8 @@ trait ActivatedQueryTrait
                 }
 
                 $column = $this->mapToColumn($matches[2], $modelClass);
-
-                if ($modelClass && $this->isColumn($column)) {
+                
+                if ($modelClass && $modelClass::find()->isColumn($column)) {
                     // rename property to column name
                     return '{{' . $matches[1] . '}}.[[' . $column . ']]' . $matches[3];
                 }
@@ -687,5 +710,7 @@ trait ActivatedQueryTrait
         }
 
         $this->_clauses = [];
+        $this->_ignoreEmpty = false;
+        $this->_ignoreNull = false;
     }
 }

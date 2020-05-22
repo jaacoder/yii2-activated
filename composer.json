@@ -16,7 +16,8 @@
         "php-di/phpdoc-reader": "~2.0.1",
         "danielstjules/stringy": "~2.3.2",
         "nesbot/carbon": "~1.21.0",
-        "yiisoft/yii2": "~2.0.14"
+        "yiisoft/yii2": "~2.0.14",
+        "jdorn/sql-formatter": "^1.2"
     },
     "config": {
         "process-timeout": 1800

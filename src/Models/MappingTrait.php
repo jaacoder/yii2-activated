@@ -7,7 +7,7 @@ use yii\db\ActiveRecord;
 trait MappingTrait
 {
     // whether or not to show extra fields with fields() method
-    protected $_autoExtraFields = true;
+    protected $autoExtraFields = true;
 
     /**
      * Property to column mapping.
@@ -129,7 +129,7 @@ trait MappingTrait
     {
         $fields = static::mapToProperties(parent::fields());
 
-        if ($this->_autoExtraFields)
+        if ($this->autoExtraFields)
             return array_merge($fields, parent::extraFields());
 
         return $fields;

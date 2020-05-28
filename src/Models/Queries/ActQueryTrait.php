@@ -9,10 +9,10 @@ use SqlFormatter;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
-trait ActivatedQueryTrait
+trait ActQueryTrait
 {
-    protected $addOperations = ['select', 'orderBy', 'groupBy'];
-    protected $andOrOperations = ['where', 'onCondition', 'having'];
+    protected $_addOperations = ['select', 'orderBy', 'groupBy'];
+    protected $_andOrOperations = ['where', 'onCondition', 'having'];
 
     protected $_aliasesModels = [];
     protected $_operation = [];
@@ -93,10 +93,10 @@ trait ActivatedQueryTrait
 
         $operation = (string) $sClause;
 
-        if (in_array($operation, $this->addOperations)) {
+        if (in_array($operation, $this->_addOperations)) {
             $operation = 'add' . $sClause->upperCaseFirst();
 
-        } else if (in_array($operation, $this->andOrOperations)) {
+        } else if (in_array($operation, $this->_andOrOperations)) {
             $operation = 'and' . $sClause->upperCaseFirst();
         }
 
@@ -120,7 +120,7 @@ trait ActivatedQueryTrait
 
         $operation = (string) $sOperation;
 
-        if (in_array($operation, $this->andOrOperations)) {
+        if (in_array($operation, $this->_andOrOperations)) {
             $operation = 'or' . $sOperation->upperCaseFirst();
         }
 
@@ -855,10 +855,10 @@ trait ActivatedQueryTrait
 
         $sOperation = s($this->_operation);
 
-        if (in_array($this->_operation, $this->addOperations)) {
+        if (in_array($this->_operation, $this->_addOperations)) {
             $this->_lastOperation = 'add' . $sOperation->upperCaseFirst();
 
-        } else if (in_array($this->_operation, $this->andOrOperations)) {
+        } else if (in_array($this->_operation, $this->_andOrOperations)) {
             $this->_lastOperation = 'and' . $sOperation->upperCaseFirst();
 
         } else {

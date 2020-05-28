@@ -2,12 +2,16 @@
 
 namespace Jaacoder\Yii2Activated\Models;
 
-trait ActivatedRecordTrait
+use Jaacoder\Yii2Activated\Helpers\MetaTrait;
+
+trait ActRecordTrait
 {
-    use AutoStartTransactionTrait;
+    use MetaTrait;
+    use ColumnTrait;
     use MappingTrait;
     use QueryExtraTrait;
-    use ColumnTrait;
+    use AutoStartTransactionTrait;
+    use UpdateExceptionTrait;
 
     /**
      * Initialize traits.

@@ -4,7 +4,7 @@ namespace Jaacoder\Yii2Activated\Controllers;
 
 use yii\base\Response;
 
-trait ActivatedControllerTrait
+trait ActControllerTrait
 {
     use CommitTransactionTrait;
     use MessagesTrait;
@@ -16,15 +16,9 @@ trait ActivatedControllerTrait
      * 
      * @param array $config
      */
-    public function activate($config = ['messagesProperty' => null])
+    public function activate()
     {
         $this->initCommitTransaction();
-
-        if (isset($config['messagesProperty'])) {
-            $this->initMessages($config['messagesProperty']);
-
-        } else {
-            $this->initMessages();
-        }
+        $this->initMessages();
     }
 }

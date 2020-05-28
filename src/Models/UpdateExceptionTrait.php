@@ -50,7 +50,7 @@ trait UpdateExceptionTrait {
      */
     protected function throwExceptionIfNeeded($result)
     {
-        if ($result || !$this->exceptionOnUpdate)
+        if ($result || !$this->exceptionOnUpdate || empty($this->errors))
             return;
 
         $errors = $this->errors;

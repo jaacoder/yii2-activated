@@ -36,8 +36,10 @@ trait MessagesTrait
         // create event handler to deal with messages after action
         $this->on(Controller::EVENT_AFTER_ACTION, function(ActionEvent $event) {
             
+            if (empty($event->result))
+                $event->result = [];
+
             if (!$this->_messagesOn // skip if user don't want messages
-                || !is_array($event->result)  // skip is result is not array
                 || (!empty($event->result) && is_numeric(array_keys($event->result)[0])) // skip if result is numeric key array
                 || isset($event->result['messages'])) // skip if key 'messages' already setted up
 

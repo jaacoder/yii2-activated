@@ -13,9 +13,9 @@ use yii\web\HttpException;
  */
 trait UpdateExceptionTrait {
 
-    protected $exceptionOnUpdate = true;
-    protected $errorPath = 'model';
-    protected $errorStatus = 400;
+    public $exceptionOnUpdate = true;
+    public $errorPath = '';
+    public $errorStatus = 400;
 
     /**
      * {@inheritdoc}

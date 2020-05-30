@@ -25,7 +25,7 @@ trait MessagesTrait
      * @var Dot
      */
     private $_dotMessages;
-    
+
     /**
      * Init messages as an empty array if it is null.
      */
@@ -34,18 +34,23 @@ trait MessagesTrait
         $this->setMessages([]);
 
         // create event handler to deal with messages after action
-        $this->on(Controller::EVENT_AFTER_ACTION, function(ActionEvent $event) {
-            
-            if (empty($event->result))
-                $event->result = [];
+        $this->on(Controller::EVENT_AFTER_ACTION, function (ActionEvent $event) {
 
-            if (!$this->_messagesOn // skip if user don't want messages
-                || (!empty($event->result) && is_numeric(array_keys($event->result)[0])) // skip if result is numeric key array
-                || isset($event->result['messages'])) // skip if key 'messages' already setted up
+            $result = $event->result;
+
+            if ($result === null)
+                $result = [];
+
+            if (!$this->_messagesOn// skip if user don't want messages
+                 || !is_array($result)
+                 || (!empty($result) && is_numeric(array_keys($result)[0])) // skip if result is numeric key array
+                 || isset($result['messages'])) // skip if key 'messages' already setted up
 
                 return;
 
-            $event->result['messages'] = (object) $this->_messages;
+            $result['messages'] = (object) $this->_messages;
+
+            $event->result = $result;
         });
     }
 
@@ -55,8 +60,9 @@ trait MessagesTrait
      */
     public function messagesOn($force = true)
     {
-        if (!$force && $this->_messagesOn === false)
+        if (!$force && $this->_messagesOn === false) {
             return;
+        }
 
         $this->_messagesOn = true;
     }
@@ -69,10 +75,10 @@ trait MessagesTrait
     {
         $this->_messagesOn = false;
     }
-    
+
     /**
      * Add success message.
-     * 
+     *
      * @param string $message
      * @param string $key
      */
@@ -83,10 +89,10 @@ trait MessagesTrait
         $key = 'success' . (empty($key) ? '' : '.' . $key);
         $this->_dotMessages->add($key, $message);
     }
-    
+
     /**
      * Add info message.
-     * 
+     *
      * @param string $message
      * @param string $key
      */
@@ -97,10 +103,10 @@ trait MessagesTrait
         $key = 'info' . (empty($key) ? '' : '.' . $key);
         $this->_dotMessages->add($key, $message);
     }
-    
+
     /**
      * Add warning message.
-     * 
+     *
      * @param string $message
      * @param string $key
      */
@@ -111,10 +117,10 @@ trait MessagesTrait
         $key = 'warning' . (empty($key) ? '' : '.' . $key);
         $this->_dotMessages->add($key, $message);
     }
-    
+
     /**
      * Add error message.
-     * 
+     *
      * @param string $message
      * @param string $key
      */
@@ -125,26 +131,26 @@ trait MessagesTrait
         $key = 'error' . (empty($key) ? '' : '.' . $key);
         $this->_dotMessages->add($key, $message);
     }
-    
+
     /**
      * Return messages.
-     * 
+     *
      * @return array
      */
     public function getMessages()
     {
         return $this->_messages;
     }
-    
+
     /**
      * Setter for messages.
-     * 
+     *
      * @return $this
      */
     public function setMessages($messages)
     {
         $this->_messages = $messages;
-        
+
         $this->_dotMessages = new Dot();
         $this->_dotMessages->setDataAsRef($this->_messages);
 

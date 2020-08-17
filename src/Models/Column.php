@@ -2,10 +2,7 @@
 
 namespace Jaacoder\Yii2Activated\Models;
 
-use Exception;
 use JsonSerializable;
-use Sesgo\CoreYii\Models\ActiveRecordPro;
-use yii\base\Object;
 use yii\db\ActiveRecord;
 
 /**
@@ -13,7 +10,7 @@ use yii\db\ActiveRecord;
  */
 class Column implements JsonSerializable {
 
-    /** @var ActiveRecord|Object */
+    /** @var ActiveRecord */
     public $className;
     public $alias;
 
@@ -25,6 +22,7 @@ class Column implements JsonSerializable {
     public function __get($name) {
         $alias = (string) $this;
 
+        /** @var _Mapping $modelClass */
         $modelClass = $this->className;
         if (method_exists($modelClass, 'mapping')) {
             $mapping = $modelClass::mapping();
@@ -43,4 +41,8 @@ class Column implements JsonSerializable {
     public function jsonSerialize() {
         return $this->__toString();
     }
+}
+
+interface _Mapping {
+    public static function mapping();
 }

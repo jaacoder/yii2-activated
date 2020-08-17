@@ -2,8 +2,6 @@
 
 namespace Jaacoder\Yii2Activated\Models;
 
-use yii\db\ActiveRecord;
-
 trait MappingTrait
 {
     // whether or not to show extra fields with fields() method

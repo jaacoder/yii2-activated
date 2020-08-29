@@ -257,6 +257,7 @@ trait ActQueryTrait
         $args = func_get_args();
 
         return $this->checkArgAndSaveOperation(count($args), __FUNCTION__, function() use ($args) {
+            $args[] = false;    // $eagerLoading = false
             parent::innerJoinWith(...$this->adjustJoinWithArgs(...$args));
         });
     }
@@ -285,7 +286,8 @@ trait ActQueryTrait
         $args = func_get_args();
 
         return $this->checkArgAndSaveOperation(count($args), __FUNCTION__, function() use ($args) {
-            parent::innerJoinWith(...$this->adjustJoinWithArgs(...$args));
+            $args[] = false;    // $eagerLoading = false
+            parent::joinWith(...$this->adjustJoinWithArgs(...$args));
         });
     }
 
@@ -794,7 +796,7 @@ trait ActQueryTrait
 
             if ($sClause->endsWith('Relation')) {
                 $sClause = $sClause->removeRight('Relation')->ensureRight('With');
-                $args[] = false;
+                $args[] = false;    // $eagerLoading = false
             }
 
             if (!method_exists($this, (string) $sClause)) {

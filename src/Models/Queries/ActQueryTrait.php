@@ -803,10 +803,8 @@ trait ActQueryTrait
                 throw new Exception('Unexistent method: ' . self::class . '->' . $sClause);
             }
 
-            // print '__call() - metodo: ' . (string) $sClause . '<br>';
             call_user_func_array([$this, (string) $sClause], $args);
             $this->resetOperation();
-            // print '__call() - resetOperation(): ' . $this->_lastOperation . '<br>';
         }
 
         return $this;

@@ -4,8 +4,8 @@ namespace Jaacoder\Yii2Activated\Controllers;
 
 use AdBar\Dot;
 use Yii;
-use yii\base\Request;
-use yii\base\Response;
+use yii\web\Request;
+use yii\web\Response;
 
 /**
  * @property Request $request

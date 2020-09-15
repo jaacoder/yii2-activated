@@ -14,12 +14,12 @@ trait MessagesTrait
     /**
      * @var string
      */
-    private $_messages;
+    private $_messages = null;
 
     /**
      * @var boolean
      */
-    private $_messagesOn = null;
+    private $_messagesOn = true;
 
     /**
      * @var Dot
@@ -31,8 +31,6 @@ trait MessagesTrait
      */
     public function initMessages()
     {
-        $this->setMessages([]);
-
         // create event handler to deal with messages after action
         $this->on(Controller::EVENT_AFTER_ACTION, function (ActionEvent $event) {
 
@@ -44,7 +42,8 @@ trait MessagesTrait
             if (!$this->_messagesOn// skip if user don't want messages
                  || !is_array($result)
                  || (!empty($result) && is_numeric(array_keys($result)[0])) // skip if result is numeric key array
-                 || isset($result['messages'])) // skip if key 'messages' already setted up
+                 || isset($result['messages']) // skip if key 'messages' already setted up
+                 || is_null($this->messages))
 
                 return;
 
@@ -52,6 +51,15 @@ trait MessagesTrait
 
             $event->result = $result;
         });
+    }
+
+    /**
+     * Enable automatic response with messages.
+     * @return void
+     */
+    public function clearMessages()
+    {
+        $this->setMessages([]);
     }
 
     /**

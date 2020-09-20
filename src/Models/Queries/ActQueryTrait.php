@@ -73,6 +73,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function addSelect($columns = null)
     {
@@ -136,7 +137,7 @@ trait ActQueryTrait
 
     /**
      * Ignore next parameter if empty.
-     * return $this
+     * @return $this
      */
     function ignoreEmpty()
     {
@@ -146,7 +147,7 @@ trait ActQueryTrait
 
     /**
      * Ignore next parameter if null.
-     * return $this
+     * @return $this
      */
     function ignoreNull()
     {
@@ -156,7 +157,7 @@ trait ActQueryTrait
 
     /**
      * Ignore parameter if empty until method 'ignoreEmptyOff()'.
-     * return $this
+     * @return $this
      */
     function ignoreEmptyOn()
     {
@@ -166,7 +167,7 @@ trait ActQueryTrait
 
     /**
      * Ignore parameter if null until method 'ignoreNullOff()'.
-     * return $this
+     * @return $this
      */
     function ignoreNullOn()
     {
@@ -176,7 +177,7 @@ trait ActQueryTrait
 
     /**
      * Turn off skipping empty parameter.
-     * return $this
+     * @return $this
      */
     function ignoreEmptyOff()
     {
@@ -186,7 +187,7 @@ trait ActQueryTrait
 
     /**
      * Turn off skipping null parameter.
-     * return $this
+     * @return $this
      */
     function ignoreNullOff()
     {
@@ -196,7 +197,7 @@ trait ActQueryTrait
 
     /**
      * @param array $args
-     * return array
+     * @return array
      */
     protected function adjustJoinWithArgs($with, $eagerLoading = true, $joinType = null)
     {
@@ -235,6 +236,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function innerJoinWith($with = null, $eagerLoading = true)
     {
@@ -264,6 +266,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function joinWith($with = null, $eagerLoading = true, $joinType = 'LEFT JOIN')
     {
@@ -293,6 +296,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function with()
     {
@@ -320,7 +324,7 @@ trait ActQueryTrait
      * @param boolean $clause
      * @param string $condition
      * @param array $params
-     * @return
+     * @return array
      */
     protected function adjustWhereArgs($clause, $condition, $params = [])
     {
@@ -385,6 +389,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function where($condition = null, $params = [])
     {
@@ -400,6 +405,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function andWhere($condition = null, $params = [])
     {
@@ -415,6 +421,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function orWhere($condition = null, $params = [])
     {
@@ -430,6 +437,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function filterWhere(array $condition)
     {
@@ -438,6 +446,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function andFilterWhere(array $condition)
     {
@@ -446,6 +455,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function orFilterWhere(array $condition)
     {
@@ -454,6 +464,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function onCondition($condition = null, $params = [])
     {
@@ -469,6 +480,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function andOnCondition($condition = null, $params = [])
     {
@@ -484,6 +496,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function orOnCondition($condition = null, $params = [])
     {
@@ -499,6 +512,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function groupBy($columns = null)
     {
@@ -511,6 +525,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function addGroupBy($columns = null)
     {
@@ -557,6 +572,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function having($condition = null, $params = [])
     {
@@ -572,6 +588,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function andHaving($condition = null, $params = [])
     {
@@ -587,6 +604,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function orHaving($condition = null, $params = [])
     {
@@ -602,6 +620,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function filterHaving(array $condition)
     {
@@ -611,6 +630,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function andFilterHaving(array $condition)
     {
@@ -620,6 +640,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function orFilterHaving(array $condition)
     {
@@ -629,6 +650,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function orderBy($columns = null)
     {
@@ -641,6 +663,7 @@ trait ActQueryTrait
 
     /**
      * {@inheritdoc}
+     * @return $this
      */
     public function addOrderBy($columns = null)
     {
@@ -673,6 +696,7 @@ trait ActQueryTrait
     /**
      * @property string $property
      * @property string $modelClass
+     * @return string
      */
     protected function mapToColumn(string $property, $modelClass = null)
     {
@@ -701,6 +725,7 @@ trait ActQueryTrait
 
     /**
      * @param string $expression
+     * @return string
      */
     protected function mapToColumnInExpression(string $expression)
     {

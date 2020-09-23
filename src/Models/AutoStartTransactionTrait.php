@@ -29,6 +29,7 @@ trait AutoStartTransactionTrait
     public function requireTransaction()
     {
         if ($this->getDb()->transaction === null || !$this->getDb()->transaction->isActive) {
+            \Yii::info('Begin Transaction');
             $this->getDb()->beginTransaction();
         }
     }

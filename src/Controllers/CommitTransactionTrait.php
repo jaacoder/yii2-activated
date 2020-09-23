@@ -17,13 +17,16 @@ trait CommitTransactionTrait
     {
         // add event handler to commit transactions
         $this->on(Controller::EVENT_AFTER_ACTION, function() {
+            \Yii::info('Commit Transactions');
             TransactionHelper::commitTransactions();
         });
 
         // add event handler to rollback transactions
         \Yii::$app->response->on(Response::EVENT_BEFORE_SEND, function(Event $event) {
-            if (\Yii::$app->errorHandler->exception !== null)
+            if (\Yii::$app->errorHandler->exception !== null) {
+                \Yii::info('Rollback Transactions');
                 TransactionHelper::rollbackTransactions();
+            }
         });
     }
     

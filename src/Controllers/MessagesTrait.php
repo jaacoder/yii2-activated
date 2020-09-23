@@ -85,6 +85,16 @@ trait MessagesTrait
     }
 
     /**
+     * Init Dot if needed.
+     * @return void 
+     */
+    public function initDotIfNeeded()
+    {
+        if (!$this->_dotMessages)
+            $this->setMessages([]);
+    }
+
+    /**
      * Add success message.
      *
      * @param string $message
@@ -95,6 +105,7 @@ trait MessagesTrait
         $this->messagesOn(false);
 
         $key = 'success' . (empty($key) ? '' : '.' . $key);
+        $this->initDotIfNeeded();
         $this->_dotMessages->add($key, $message);
     }
 
@@ -109,6 +120,7 @@ trait MessagesTrait
         $this->messagesOn(false);
 
         $key = 'info' . (empty($key) ? '' : '.' . $key);
+        $this->initDotIfNeeded();
         $this->_dotMessages->add($key, $message);
     }
 
@@ -123,6 +135,7 @@ trait MessagesTrait
         $this->messagesOn(false);
 
         $key = 'warning' . (empty($key) ? '' : '.' . $key);
+        $this->initDotIfNeeded();
         $this->_dotMessages->add($key, $message);
     }
 
@@ -137,6 +150,7 @@ trait MessagesTrait
         $this->messagesOn(false);
 
         $key = 'error' . (empty($key) ? '' : '.' . $key);
+        $this->initDotIfNeeded();
         $this->_dotMessages->add($key, $message);
     }
 
